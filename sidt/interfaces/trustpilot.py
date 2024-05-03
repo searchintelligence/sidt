@@ -42,7 +42,7 @@ def getReviews(id, headers) -> list[Review]:
     if pages > 1:
         for p in tqdm(range(2, pages), leave=False):
             url += f"&?page={p}"
-            r = utils.makeRequest(url=url, method="GET", headers=headers).json()
+            r = makeRequest(url=url, method="GET", headers=headers).json()
             reviews.append(processReviews(r))
     
     return reviews
