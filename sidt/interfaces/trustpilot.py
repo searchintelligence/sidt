@@ -1,4 +1,4 @@
-from ..utils.utils import makeRequest
+from ..utils.api import makeRequest
 from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from tqdm import tqdm

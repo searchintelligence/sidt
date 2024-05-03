@@ -1,4 +1,4 @@
-from ..utils.utils import makeRequest
+from ..utils.api import makeRequest
 
 cookies = {
     'mid': 'ZcCo9gAEAAGPAQvjs5_cokvzF5WS',
