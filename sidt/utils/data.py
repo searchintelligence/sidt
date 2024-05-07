@@ -1,3 +1,6 @@
+import re
+import unicodedata
+
 
 def nested_lookup(nested_item, lookup_keys):
     """
@@ -86,3 +89,55 @@ def excel_column_converter(value):
     
     else:
         raise TypeError("Input must be an integer or a string.")
+    
+
+def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_digit=False,
+                       strip_all_whitespace=False, remove_problematic_chars=True, truncate_length=None,
+                       to_case=None):
+    """
+    Formats a string based on specified parameters to make it computer-readable and ensures consistent encoding.
+
+    Args:
+        s (str): The input string to clean.
+        replace_spaces (str, None): If specified, replaces spaces with the given string.
+        replace_hyphens (str, None): If specified, replaces hyphens with the given string.
+        no_leading_digit (bool): If True, adds an underscore in front of leading digits.
+        strip_all_whitespace (bool): If True, removes all extra internal and external whitespace.
+        remove_problematic_chars (bool, str, None): Controls removal of problematic characters.
+            - True: Removes a default set of problematic characters.
+            - False or None: Does not remove any problematic characters.
+            - str: Removes characters specified in the provided string, e.g., "#$%&".
+        truncate_length (int, None): If specified, truncates the string to this length.
+        to_case (str, None): If 'lower' or 'upper', converts the string to the specified case.
+    """
+
+    if strip_all_whitespace:
+        s = re.sub(r'\s+', ' ', s).strip()
+
+    if to_case == 'lower':
+        s = s.lower()
+    elif to_case == 'upper':
+        s = s.upper()
+
+    if replace_spaces:
+        s = s.replace(" ", replace_spaces)
+
+    if replace_hyphens:
+        s = s.replace("-", replace_hyphens)
+
+    if no_leading_digit and s and s[0].isdigit():
+        s = '_' + s
+
+    if isinstance(remove_problematic_chars, str):
+        pattern = '[' + re.escape(remove_problematic_chars) + ']'
+        s = re.sub(pattern, '', s)
+    elif remove_problematic_chars is True:
+        default_problematic = r'\\/*?:\[\]"<>|'
+        s = re.sub('[' + re.escape(default_problematic) + ']', '', s)
+
+    if truncate_length is not None and len(s) > truncate_length:
+        s = s[:truncate_length]
+
+    return s
+
+
