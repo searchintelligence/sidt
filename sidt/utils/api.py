@@ -1,9 +1,10 @@
-import tls_client
 import time
+
+import tls_client
 from tqdm import tqdm
 
 
-def newSession():
+def new_session():
     return tls_client.Session(
         client_identifier="chrome124",
         random_tls_extension_order=True
@@ -11,7 +12,7 @@ def newSession():
 
 
 def make_request(url, method="GET", headers="", cookies="", params=""):
-    session = newSession()
+    session = new_session()
     while True:
         response = session.get(url, headers=headers,
                                cookies=cookies, params=params)

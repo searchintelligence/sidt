@@ -2,8 +2,16 @@ import pandas as pd
 
 
 def explode_by_multiple(df, explode_on):
-    """Explodes a dataframe by each column in a list of columns."""
+    """
+    Expands DataFrame by exploding lists in specified columns into separate rows.
 
+    Parameters:
+    df (pd.DataFrame): The DataFrame to modify.
+    explode_on (list of str): Column names containing lists to explode into rows.
+    
+    Returns:
+    pd.DataFrame: DataFrame with each list in specified columns expanded into rows.
+    """
     for col in explode_on:
         df = df.explode(col)
     return df

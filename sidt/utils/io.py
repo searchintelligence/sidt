@@ -4,6 +4,7 @@ import os
 
 from dataclasses import asdict, fields
 from enum import Enum
+from tqdm import tqdm
 
 import pandas as pd
 
@@ -61,7 +62,7 @@ class CLIF():
         """
         format_sequence = "".join(arg.value for arg in args)
         return f"{format_sequence}{text}{CLIF.RESET}"
-    
+
 
 def dump(data, filename):
     # data must be a dataclass object or list of the same dataclass objects
@@ -88,9 +89,28 @@ def get_current_path():
 
 
 def xlsx_to_dfs(file_path):
-    """Reads an xlsx file to a dictionary of dataframes, using sheet names as keys.
-    Return is of form: {"sheet_name": df1, "sheet_name2": df2}"""
+    """
+    Reads an Excel file and returns a dictionary of DataFrames, one for each sheet.
+
+    Parameters:
+    file_path (str): The path to the Excel (.xlsx) file.
+
+    Returns:
+    dict: A dictionary where keys are sheet names and values are DataFrames corresponding to each sheet.
+    """
 
     return pd.read_excel(pd.ExcelFile(file_path), sheet_name=None, index_col=None)
 
 
+def dfs_to_xlsx(dfs, file_path):
+    """
+    Writes a dictionary of DataFrames to an Excel file, with each DataFrame as a separate sheet.
+
+    Parameters:
+    dfs (dict): A dictionary where keys are sheet names and values are DataFrames.
+    file_path (str): The path where the Excel (.xlsx) file will be saved.
+    """
+
+    with pd.ExcelWriter(file_path, engine="xlsxwriter") as writer:
+        for sheet_name, df in dfs.items():
+            df.to_excel(writer, sheet_name=sheet_name)

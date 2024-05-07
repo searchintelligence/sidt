@@ -1,5 +1,3 @@
-import os
-
 
 def nested_lookup(nested_item, lookup_keys):
     """
