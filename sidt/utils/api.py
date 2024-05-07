@@ -10,7 +10,7 @@ def newSession():
     )
 
 
-def makeRequest(url, method="GET", headers="", cookies="", params=""):
+def make_request(url, method="GET", headers="", cookies="", params=""):
     session = newSession()
     while True:
         response = session.get(url, headers=headers,

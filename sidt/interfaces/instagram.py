@@ -1,4 +1,4 @@
-from ..utils.api import makeRequest
+from ..utils.api import make_request
 
 cookies = {
     'mid': 'ZcCo9gAEAAGPAQvjs5_cokvzF5WS',
@@ -43,7 +43,7 @@ headers = {
 def getHashtagPopularity(tag):
     params = {"tag_name": tag}
     url = "https://www.instagram.com/api/v1/tags/web_info/"
-    r = makeRequest(url=url, method="GET", headers=headers, cookies=cookies, params=params).json()
+    r = make_request(url=url, method="GET", headers=headers, cookies=cookies, params=params).json()
     try:
         return r["count"]
     except:

@@ -1,4 +1,4 @@
-from ..utils.api import makeRequest
+from ..utils.api import make_request
 from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -22,7 +22,7 @@ class Trustpilot:
     category: str
 
 
-def processReviews(response) -> list[Review]:
+def process_reviews(response) -> list[Review]:
     reviews = []
     for review in response["pageProps"]["reviews"]:
         heading = review["title"]
@@ -32,25 +32,25 @@ def processReviews(response) -> list[Review]:
     return reviews
 
 
-def getReviews(id, headers) -> list[Review]:
+def get_reviews(id, headers) -> list[Review]:
     reviews = []
     url = f"https://www.trustpilot.com/_next/data/businessunitprofile-consumersite-2.388.0/review/{id}.json?businessUnit={id}"
-    r = makeRequest(url=url, method="GET", headers=headers).json()
-    reviews.append(processReviews(r))
+    r = make_request(url=url, method="GET", headers=headers).json()
+    reviews.append(process_reviews(r))
 
     pages = r["pageProps"]["filters"]["pagination"]["totalPages"]
     if pages > 1:
         for p in tqdm(range(2, pages), leave=False):
             url += f"&?page={p}"
-            r = makeRequest(url=url, method="GET", headers=headers).json()
-            reviews.append(processReviews(r))
+            r = make_request(url=url, method="GET", headers=headers).json()
+            reviews.append(process_reviews(r))
     
     return reviews
 
 
-def getSiteInfo(id, headers) -> Trustpilot:
+def get_site_info(id, headers) -> Trustpilot:
     url = f"https://www.trustpilot.com/review/{id}"
-    r = makeRequest(url=url, method="GET", headers=headers).text
+    r = make_request(url=url, method="GET", headers=headers).text
 
     soup = BeautifulSoup(r, 'html.parser').find(attrs={"id": "business-unit-title"})
 
