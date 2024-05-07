@@ -26,7 +26,7 @@ class TestTrustpilot(unittest.TestCase):
         }
 
     def test_getSiteInfo(self):
-        site_info = getSiteInfo("trustpilot.com", self.headers)
+        site_info = get_site_info("trustpilot.com", self.headers)
 
         self.assertIsInstance(site_info, Trustpilot)
         self.assertEqual(site_info.name, "Trustpilot")
