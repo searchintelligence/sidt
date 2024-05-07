@@ -131,11 +131,11 @@ def open_dir(target_dir, return_pid=False):
 
     process = None
     if sys.platform == "win32":
-        process = subprocess.Popen(['explorer', target_dir])
+        process = subprocess.Popen(["explorer", target_dir])
     elif sys.platform == "darwin":
-        process = subprocess.Popen(['open', target_dir])
+        process = subprocess.Popen(["open", target_dir])
     else:
-        process = subprocess.Popen(['xdg-open', target_dir])
+        process = subprocess.Popen(["xdg-open", target_dir])
     
     if return_pid:
         return process.pid
