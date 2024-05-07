@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def explode_by_multiple(df, explode_on):
+def explode_by_cols(df, explode_on):
     """
     Expands DataFrame by exploding lists in specified columns into separate rows.
 
