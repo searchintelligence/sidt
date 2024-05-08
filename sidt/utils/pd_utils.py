@@ -67,6 +67,7 @@ def move_cols(df, cols_to_move, position=None, inplace=False):
     move_cols(df, {'index': 0, 'state': 1, 'city': -1})
     move_cols(df, ['index', 'state', 'city'], 0)
     """
+
     if isinstance(cols_to_move, list):
         if position is None:
             raise ValueError("Position must be provided when cols_to_move is a list.")
@@ -78,16 +79,18 @@ def move_cols(df, cols_to_move, position=None, inplace=False):
 
     # Create a new column order
     current_cols = list(df.columns)
-    # Remove the columns to move from their current positions
     for col in cols_to_move:
         if col in current_cols:
             current_cols.remove(col)
 
-    # Insert each column in its new position, handling negative indices
-    for col, pos in sorted(cols_to_move.items(), key=lambda x: x[1] if x[1] >= 0 else len(current_cols) + x[1] + 1):
-        if pos < 0:
-            pos += len(current_cols) + 1
-        current_cols.insert(pos, col)
+    # Handle positive and negative indices separately
+    if position >= 0:
+        for col in reversed(list(cols_to_move.keys())):
+            current_cols.insert(position, col)
+    else:
+        position += len(current_cols) + 1
+        for col in list(cols_to_move.keys()):
+            current_cols.insert(position, col)
 
     if inplace:
         df.columns = current_cols
