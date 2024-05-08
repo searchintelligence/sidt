@@ -41,7 +41,7 @@ def merge_dfs(dfs, merge_on, fill_na=None, sort_by_merge_col=False):
     return merged_df
 
 
-def move_cols(df, cols_to_move, position=None):
+def move_cols(df, cols_to_move, position=None, inplace=False):
     """
     Moves specified columns to specified positions in a DataFrame.
 
@@ -89,5 +89,8 @@ def move_cols(df, cols_to_move, position=None):
             pos += len(current_cols) + 1
         current_cols.insert(pos, col)
 
-    return df[current_cols]
-
+    if inplace:
+        df.columns = current_cols
+    else:
+        new_df = df[current_cols]
+        return new_df
