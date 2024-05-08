@@ -17,7 +17,7 @@ def explode_by_cols(df, explode_on):
     return df
 
 
-def merge_dfs(dfs, merge_on, fill_na=None, sort_by_merge_col=False, ignore_missing_cols=False):
+def merge_dfs(dfs, merge_on, fill_na=None, sort_by_merge_col=False):
     """
     Merges a list of pandas DataFrames on a specified column using an outer merge strategy. Optionally fills NaN 
     values and sorts the resulting DataFrame by the merge key.
@@ -31,14 +31,7 @@ def merge_dfs(dfs, merge_on, fill_na=None, sort_by_merge_col=False, ignore_missi
 
     merged_df = dfs[0]
     for df in dfs[1:]:
-        try:
-            merged_df = pd.merge(left=merged_df, right=df, how="outer", left_on=merge_on, right_on=merge_on, suffixes=("", "_drop"))
-        except KeyError:
-            if ignore_missing_cols:
-                continue
-            else:
-                raise
-
+        merged_df = pd.merge(left=merged_df, right=df, how="outer", left_on=merge_on, right_on=merge_on, suffixes=("", "_drop"))
     merged_df = merged_df[[col for col in merged_df.columns if not col.endswith("_drop")]]
     if fill_na is not None:
         merged_df.fillna(fill_na, inplace=True)
@@ -48,7 +41,7 @@ def merge_dfs(dfs, merge_on, fill_na=None, sort_by_merge_col=False, ignore_missi
     return merged_df
 
 
-def move_cols(df, cols_to_move, position=None, inplace=False):
+def move_cols(df, cols_to_move, position=None, inplace=False, ignore_missing_cols=False):
     """
     Moves specified columns to specified positions in a DataFrame.
 
@@ -81,8 +74,9 @@ def move_cols(df, cols_to_move, position=None, inplace=False):
         cols_to_move = {col: position for col in cols_to_move}
 
     # Ensure all column names exist in the DataFrame
-    if not all(col in df.columns for col in cols_to_move):
-        raise ValueError("One or more columns specified do not exist in the DataFrame.")
+    cols_to_move = {col: pos for col, pos in cols_to_move.items() if col in df.columns or not ignore_missing_cols}
+    if not cols_to_move:
+        raise ValueError("None of the specified columns exist in the DataFrame.")
 
     # Create a new column order
     current_cols = list(df.columns)
