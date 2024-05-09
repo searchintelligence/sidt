@@ -89,6 +89,21 @@ def get_actor_filmography(actor_id: str) -> dict:
     return filmography
 
 def get_film_info(film_id: str) -> dict:
+    """
+    Retrieves information about a film from IMDb based on the film ID.
+
+    Args:
+        film_id (str): The IMDb ID of the film.
+
+    Returns:
+        dict: A dictionary containing the following film information:
+            - title (str): The title of the film.
+            - year (str): The release year of the film.
+            - age_rating (str): The age rating of the film.
+            - run_time (str): The duration of the film.
+            - rating (str): The IMDb rating of the film.
+            - review_count (str): The number of reviews for the film.
+    """
     url = f"https://www.imdb.com/title/{film_id}/"
     r = make_request(url=url, method="GET").text
 
