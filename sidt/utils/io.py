@@ -113,10 +113,24 @@ def dfs_to_xlsx(dfs, file_path):
 
 
 class XLWriter():
-    """Class for writing dataframes to Excel with clean formatting, titles, contents and descriptions"""
+    """
+    Class for writing dataframes to Excel with clean formatting, titles, contents, descriptions, and navigation.
 
+    Methods:
+        __init__(): Initializes the writer with a specified file path.
+        add_sheet(): Adds a DataFrame as a new sheet in the Excel file.
+        add_contents(): Adds a contents sheet listing all other sheets. (optional)
+        write(): Writes all added sheets to the Excel file and saves it.
+    """
 
     def __init__(self, file_path="xlwriter_output.xlsx"):
+        """
+        Initialize the XLWriter with a file path.
+
+        Args:
+            file_path (str): The file path for the output Excel file. Defaults to "xlwriter_output.xlsx".
+        """
+
         self.file_path = file_path
         self.has_contents = False
         self.sheets = []
@@ -124,6 +138,8 @@ class XLWriter():
 
     @dataclass
     class Sheet:
+        """Data class representing a sheet in the Excel file."""
+
         df: pd.DataFrame
         sheet_name: str
         table_name: str
@@ -138,68 +154,96 @@ class XLWriter():
         wrap_cells: bool = False
         worksheet: Worksheet = None
         is_contents: bool = False
+        humanise_headers: bool = False
 
 
-    def add_sheet(self, df, sheet_name, title, description, extra_info={}, autofilter=False, is_contents=False, column_widths=None, wrap_cells=False, humanise_headers=True, position=-1, enum_sheet_name=True):
-        """"""
+    def add_sheet(self, df, sheet_name, title, description, extra_info={}, autofilter=False, _is_contents=False, 
+                  column_widths=None, wrap_cells=False, humanise_headers=True, position=-1, enum_sheet_name=True,
+                  default_col_width=15):
+        """
+        Add a DataFrame as a new sheet in the Excel file. Use after initialising the writer.
+
+        Args:
+            df (pd.DataFrame): DataFrame to be written to the sheet.
+            sheet_name (str): Name of the sheet.
+            title (str): Title of the sheet.
+            description (str): Description of the sheet.
+            extra_info (dict): Additional information for the sheet. Defaults to {}.
+            autofilter (bool): Whether to apply autofilter. Defaults to False.
+            column_widths (Union[int, List[int], Dict[int, int], None]): Specifies column widths.
+                - int: Applies the same width to all columns.
+                - List[int]: Specifies individual widths for each column.
+                - Dict[int, int]: Specifies widths for columns by their index.
+                - None: Uses the default column width.
+            default_col_width (int): Default column width. Defaults to 15.
+            wrap_cells (bool): Whether to wrap text in cells. Defaults to False.
+            humanise_headers (bool): Whether to humanize headers. Defaults to True.
+            position (int): Position to insert the sheet. Defaults to -1 (append).
+            enum_sheet_name (bool): Whether to enumerate the sheet name. Defaults to True.
+        """
         
-        # Computerise sheet name
+        # Enumerate the sheet name if required
         if enum_sheet_name:
             num_sheets = len(self.sheets)
             sheet_name = f"{num_sheets + 1}. {sheet_name}"
+        
+        # Clean sheet name and table name
+        sheet_name = humanise_string(sheet_name)
         sheet_name = computerise_string(sheet_name, truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
         table_name = computerise_string(sheet_name, remove_problematic_chars=True, replace_hyphens="_", strip_all_whitespace=True, 
                                         no_leading_digit=True, replace_spaces="_", to_case="lower")
         
-        # Convert column headers to human readable format
+        # Convert column headers to human readable format if required
         if humanise_headers:
             df.columns = [humanise_string(col) for col in df.columns]
 
-        # Get sheet metadata
+        # Determine column widths
         no_cols = len(df.columns)
+        column_widths = self._get_column_widths(no_cols, column_widths, default_col_width)
 
-        # Add the sheet to the list
+        # Create the sheet object
         sheet = XLWriter.Sheet(df=df, sheet_name=sheet_name, table_name=table_name, title=title, description=description, no_cols=no_cols, 
-                               extra_info=extra_info, column_widths=column_widths, wrap_cells=wrap_cells, autofilter=autofilter, is_contents=is_contents)
+                               extra_info=extra_info, column_widths=column_widths, wrap_cells=wrap_cells, autofilter=autofilter, is_contents=_is_contents,
+                               humanise_headers=humanise_headers)
+        
+        # Insert the sheet at the specified position, defaults to append
         if position < 0:
             position = max(len(self.sheets) + position + 1, 0)
         self.sheets.insert(position, sheet)
 
 
-    def add_contents(self, title="Contents", sheet_name="Contents", stars=True, col_widths=[30, 60, 100], default_col_width=15):
-        self.contents_stars = stars
-        self.contents_title = title
-        self.contents_sheet_name = sheet_name
-        self.contents_col_widths = col_widths
-        self.contents_default_col_width = default_col_width
-        
+    def add_contents(self, title="Contents", sheet_name="Contents", stars=True, column_widths=[30, 60, 100], default_col_width=15):
+        """
+        Add a contents sheet summarizing all other sheets. Use after adding any required sheets.
+
+        Args:
+            title (str): Title of the contents sheet. Defaults to "Contents".
+            sheet_name (str): Name of the contents sheet. Defaults to "Contents".
+            stars (bool): Whether to include a star column. Defaults to True.
+            column_widths (list): List of column widths. Defaults to [30, 60, 100].
+            default_col_width (int): Default column width. Defaults to 15.
+        """
+
         # Get the main body contents df
         contents_df = self._get_contents_df()
-        no_cols = len(contents_df.columns)
-        col_widths = self.contents_col_widths
-        
-        # Determine column widths
-        if isinstance(col_widths, int):
-            col_widths = [col_widths] * no_cols
-        elif isinstance(col_widths, list) and len(col_widths) < no_cols:
-            col_widths.extend([self.contents_default_col_width] * (no_cols - len(col_widths)))
-        elif isinstance(col_widths, dict):
-            col_widths = [col_widths.get(col, self.contents_default_col_width) for col in contents_df.columns]
-        
+
         # Add star column if required
-        if self.contents_stars:
+        if stars:
             contents_df.insert(1, "★", "")
-            col_widths.insert(1, 2)
-        self.contents_col_widths = col_widths
-        
+            column_widths.insert(1, 2)
+
         # Add contents sheet to the writer
-        self.add_sheet(df=contents_df, sheet_name=self.contents_sheet_name, title=self.contents_title, 
-                       description="Contents Sheet", autofilter=False, column_widths=col_widths, 
+        self.add_sheet(df=contents_df, sheet_name=sheet_name, title=title, default_col_width=default_col_width,
+                       description="Contents Sheet", autofilter=False, column_widths=column_widths, 
                        wrap_cells=True, position=0, enum_sheet_name=False, is_contents=True)
         self.has_contents = True
-
+        
 
     def write(self):
+        """
+        Write all added sheets and the contents to the Excel file and saves it.
+        Should be called after adding all required sheets with add_sheet() and add_contents().
+        """
 
         self._initialise_writer()
         
@@ -210,21 +254,52 @@ class XLWriter():
                 worksheet = self.writer.book.add_worksheet(sheet.sheet_name)
                 sheet.worksheet = worksheet
 
-            self._sheet_to_excel(sheet)
+            # Write the sheet title and data
+            self._write_sheet_title(sheet)
+            self._write_sheet_data(sheet)
 
         self.writer.close()
 
 
+    def _initialise_writer(self):
+        """
+        Initialise the Excel writer and styles.
+
+        Sets up the Excel writer, output sheets list, and formatting styles for titles, descriptions, and hyperlinks.
+        """
+
+        # Initialise writer
+        self.writer = pd.ExcelWriter(self.file_path, engine="xlsxwriter")
+        
+        # Initialise styles and formats
+        self.table_style = "Table Style Light 12"
+        title_base_style =    {"bold": True, "align": "left", "valign": "vcenter", "text_wrap": True, "fg_color": "#8064a2"}
+        hyprlink_base_style = {"bold": True, "align": "left", "valign": "vcenter", "text_wrap": True, "underline": 1}
+        self.formats = {
+            "title":              self.writer.book.add_format({**title_base_style, "font_size": 16, "font_color": "#FFFFFF"}),
+            "description":        self.writer.book.add_format({**title_base_style, "font_size": 11, "font_color": "#FFFFFF"}),
+            "hyperlink_sheet":    self.writer.book.add_format({**hyprlink_base_style, "font_size": 12, "font_color": "#FFDE15", "fg_color": "#8064a2"}),
+            "hyperlink_contents": self.writer.book.add_format({**hyprlink_base_style, "font_size": 11, "font_color": "#8557ea"}),
+        }
+
+
     def _get_contents_df(self):
+        """
+        Create a DataFrame summarizing all sheets' metadata.
+
+        Returns:
+            pd.DataFrame: DataFrame containing sheet names, titles, descriptions, and extra information.
+        """
 
         contents_data = []
-        
         for sheet in self.sheets:
             sheet_metadata = {
                 "sheet_name": sheet.sheet_name,
                 "title": sheet.title,
                 "description": sheet.description
             }
+
+            # Add extra information to the metadata
             for key, value in sheet.extra_info.items():
                 sheet_metadata[key] = value
             contents_data.append(sheet_metadata)
@@ -233,54 +308,188 @@ class XLWriter():
         return contents_df
 
 
-    def _initialise_writer(self):
+    def _write_sheet_data(self, sheet):
+        """
+        Write data to the specified sheet, including hyperlinks if it is the contents sheet.
 
-        # Initialise writer
-        self.writer = pd.ExcelWriter(self.file_path, engine="xlsxwriter")
-        self.out_sheets = []
+        Args:
+            sheet (Sheet): The sheet object containing the DataFrame and metadata.
+        """
+
+        start_row = 2 + len(sheet.extra_info.keys())
+
+        # If sheet is the contents sheet, write the contents data
+        if sheet.is_contents:
+            self._df_to_table(sheet.df, sheet, start_row=start_row)
+
+            # Adding hyperlinks to the sheet names in the Contents sheet
+            sheet_names = sheet.df["Sheet Name"].tolist()
+            for row_num, sheet_name in enumerate(sheet_names): 
+                link_sheet_name = f"'{sheet_name}'!A1"
+                link_formula = f'=HYPERLINK("#{link_sheet_name}", "{sheet_name}")'
+                sheet.worksheet.write_formula(row_num+start_row, 0, link_formula, self.formats["hyperlink_contents"])
         
-        # Initialise styles
-        self.table_style = "Table Style Light 12"
-        self.formats = {
-            "title": self.writer.book.add_format({"bold": True, "font_size": 16, "font_color": "#FFFFFF", "align": "left", "valign": "vcenter", "text_wrap": True, "fg_color": "#8064a2"}),
-            "description": self.writer.book.add_format({"bold": True, "font_size": 11, "font_color": "#FFFFFF", "align": "left", "valign": "vcenter", "text_wrap": True, "fg_color": "#8064a2"}),
-            "header_hyperlink": self.writer.book.add_format({"bold": True, "font_size": 12, "font_color": "#FFDE15", "align": "left", "valign": "vcenter", "text_wrap": True, "fg_color": "#8064a2", "underline": 1}),
-            "contents_hyperlink": self.writer.book.add_format({"bold": True, "underline": 1, "font_color": "#8557ea"}),
-            "wrap_text": self.writer.book.add_format({"text_wrap": True})
-        }
+        # If sheet is not the contents sheet, offset by 1 row for back-link to contents
+        else:
+            self._df_to_table(sheet.df, sheet, start_row=start_row+1)
 
 
-    def _sheet_to_excel(self, sheet):
-
-        # Write title and description using merged cells, if applicable
-        self._write_sheet_title(sheet)
-
-            
     def _write_sheet_title(self, sheet):
+        """
+        Write the title, description, extra information, and hyperlink to the worksheet.
+
+        Args:
+            sheet (Sheet): The Sheet object containing the DataFrame and metadata.
+        """
+
         worksheet = sheet.worksheet
         main_df = sheet.df
 
-        last_col_index = len(main_df.columns)
-        last_col_name = excel_column_converter(last_col_index)
-        last_row_index = 2 + len(sheet.extra_info.keys())
+        # Determine the last column and row indices for the title section
+        end_col_index = len(main_df.columns)
+        end_col_name = excel_column_converter(end_col_index)
+        end_row_index = 2 + len(sheet.extra_info.keys())
         
-        # Merge and format title and description
-        if last_col_index > 1:
-            worksheet.merge_range(f"A1:{last_col_name}1", sheet.title, self.formats["title"])
-            worksheet.merge_range(f"A2:{last_col_name}2", sheet.description, self.formats["description"])
+        # Write, merge, and format title and description
+        if end_col_index > 1:
+            worksheet.merge_range(f"A1:{end_col_name}1", sheet.title, self.formats["title"])
+            worksheet.merge_range(f"A2:{end_col_name}2", sheet.description, self.formats["description"])
 
+            # Write extra information
             for i, (key, value) in enumerate(sheet.extra_info.items()):
                 text = f"{humanise_string(key)} - {value}"
-                worksheet.merge_range(f"A{3+i}:{last_col_name}{3+i}", text, self.formats["description"])
+                worksheet.merge_range(f"A{3+i}:{end_col_name}{3+i}", text, self.formats["description"])
         else:
-            # Write without merging if only one column
             worksheet.write("A1", sheet.title, self.formats["title"])
             worksheet.write("A2", sheet.description, self.formats["description"])
+
+            # Write extra information
+            for i, (key, value) in enumerate(sheet.extra_info.items()):
+                text = f"{humanise_string(key)} - {value}"
+                worksheet.write(f"A{3+i}", text, self.formats["description"])
             
-        # Hyperlink to return to the contents sheet
+        # Add hyperlink to return to the contents sheet
         if self.has_contents and not sheet.is_contents:
-            if last_col_index > 1:
-                worksheet.merge_range(f"A{last_row_index+1}:{last_col_name}{last_row_index+1}", "Return to Contents")
+            if end_col_index > 1:
+                worksheet.merge_range(f"A{end_row_index+1}:{end_col_index}{end_row_index+1}", "Return to Contents")
             link_sheet_name = f"'Contents'!A1"
             link_formula = f'=HYPERLINK("#{link_sheet_name}", "Return to Contents")'
-            worksheet.write_formula(last_row_index, 0, link_formula, self.formats["header_hyperlink"])
+            worksheet.write_formula(end_row_index, 0, link_formula, self.formats["hyperlink_sheet"])
+
+
+    def _df_to_table(self, df, sheet, start_row=0, start_col=0):
+        """
+        Write the DataFrame to the specified sheet in the Excel file, formatting it as a table.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to write to the sheet.
+            sheet (Sheet): The sheet object containing metadata and formatting options.
+            start_row (int): The starting row for writing the DataFrame. Defaults to 0.
+            start_col (int): The starting column for writing the DataFrame. Defaults to 0.
+        """
+
+        # Determine the last row and column indices
+        end_row = start_row + len(df)
+        end_col = start_col + len(df.columns) - 1
+
+        # Write the DataFrame to Excel
+        df.to_excel(self.writer, sheet_name=sheet.sheet_name, startrow=start_row, startcol=start_col, index=sheet.include_index, header=sheet.include_headers)
+        worksheet = sheet.worksheet
+
+        # Reformat column headers if configured to do so.
+        if sheet.humanise_headers:
+            df.columns = [humanise_string(col) for col in df.columns]
+
+        # Set the table formatting config and set the range as a table
+        table_config = {
+            "columns": [{"header": column} for column in df.columns],
+            "style": self.table_style,
+            "autofilter": sheet.autofilter,
+            "name": sheet.table_name
+        }
+        worksheet.add_table(start_row, start_col, end_row, end_col, table_config)
+
+        # Apply text wrapping to headers
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(start_row, start_col + col_num, value, self.formats["description"])
+
+        # Combined loop to set column widths and apply data formats
+        for i, column_name in enumerate(df.columns, start=start_col):
+            
+            # Determine the format object for the column
+            data_format = self._get_column_data_format(df[column_name])
+            format = {}
+            if sheet.wrap_cells:
+                format["text_wrap"] = True
+
+            # Apply the format to the column
+            format_obj = self.writer.book.add_format(format)
+            col_width = sheet.column_widths[i - start_col]
+            worksheet.set_column(i, i, col_width, format_obj)
+
+            
+    @staticmethod
+    def _get_column_data_format(column):
+        """
+        Determine the appropriate format string for a DataFrame column based on its content.
+
+        Args:
+            column (pd.Series): The DataFrame column to analyze.
+
+        Returns:
+            str: The format string to use for the column.
+        """
+
+        # If all values are missing
+        if column.dropna().empty:
+            return ""
+        
+        # If all values are numeric
+        elif column.dropna().apply(lambda x: isinstance(x, (int, float, np.float64, np.int64))).all():
+            max_value = column.max()
+
+            # If all values are integers
+            if column.dropna().apply(lambda x: float(x).is_integer()).all():
+                format_str = "#,##0"
+            # If some values are floats
+            else:
+                if max_value > 10000:
+                    format_str = "#,##0"
+                else:
+                    format_str = "#,##0.00"
+
+        # If some values are non-numeric
+        else:
+            format_str = "@" 
+        
+        return format_str
+
+
+    @staticmethod
+    def _get_column_widths(no_cols, column_widths, default_width=15):
+        """
+        Determine column widths based on the input type.
+
+        Args:
+            no_cols (int): Number of columns.
+            column_widths (int, List[int], Dict[int, int], or None): The widths to set for columns.
+                - int: Same width for all columns.
+                - List[int]: Specific width for each column.
+                - Dict[int, int]: Width for each column by index.
+                - None: Use the default width for all columns.
+            default_width (int): Default width to use if not specified. Defaults to 15.
+
+        Returns:
+            List[int]: List of column widths.
+        """
+
+        if isinstance(column_widths, int):
+            column_widths = [column_widths] * no_cols
+        elif isinstance(column_widths, list) and len(column_widths) < no_cols:
+            column_widths.extend([default_width] * (no_cols - len(column_widths)))
+        elif isinstance(column_widths, dict):
+            column_widths = [column_widths.get(col, default_width) for col in range(no_cols)]
+        elif column_widths is None:
+            column_widths = [default_width] * no_cols
+        
+        return column_widths
