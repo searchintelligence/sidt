@@ -117,7 +117,7 @@ def get_film_info(film_id: str) -> dict:
     except: age_rating = None
     try: run_time = sublist.find_all("li")[2].get_text(strip=True)
     except: run_time = None
-    try: rating = soup.find(attrs={"data-testid": "hero-rating-bar__aggregate-rating__score"}).get_text(strip=True)
+    try: rating = soup.find(attrs={"data-testid": "hero-rating-bar__aggregate-rating__score"}).get_text(strip=True).replace("/10", "")
     except: rating = None
     try: review_count = soup.find(class_="sc-bde20123-3 gPVQxL").get_text(strip=True)
     except: review_count = None
