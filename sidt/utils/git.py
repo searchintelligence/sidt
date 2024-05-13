@@ -80,17 +80,11 @@ class GitController():
         author = self.run_command("log", "-1", "--pretty=format:%an")
         date = self.run_command("log", "-1", "--pretty=format:%ad")
 
-        # Calculate commits ahead and behind
-        ahead = int(self.run_command("rev-list", "--count", "HEAD", f"^origin/main").strip())
-        behind = int(self.run_command("rev-list", "--count", "origin/main", f"^HEAD").strip())
-
         self.local_commit = {
             "hash": commit_hash,
             "message": commit_message,
             "author": author,
             "date": date,
-            "commits ahead": ahead,
-            "commits behind": behind
         }
         return self.local_commit
 
@@ -116,17 +110,11 @@ class GitController():
         author = self.run_command("log", "-1", f"{remote}/{branch}", "--pretty=format:%an")
         date = self.run_command("log", "-1", f"{remote}/{branch}", "--pretty=format:%ad")
 
-        # Calculate commits ahead and behind
-        ahead = int(self.run_command("rev-list", "--count", f"{remote}/{branch}", f"^HEAD").strip())
-        behind = int(self.run_command("rev-list", "--count", "HEAD", f"^{remote}/{branch}").strip())
-
         self.remote_commit = {
             "hash": commit_hash,
             "message": commit_message,
             "author": author,
-            "date": date,
-            "commits ahead": ahead,
-            "commits behind": behind
+            "date": date
         }
         return self.remote_commit
 
@@ -178,8 +166,9 @@ class GitController():
 
         print("Fetching latest changes from the remote...")
         self.get_remote_commit(remote, branch)
+        self.get_commit_difference(remote, branch)
 
-        if self.get_commit_difference(remote, branch):
+        if self.is_outdated:
             print("Resetting local branch to match remote branch...")
             result = self.run_command("reset", "--hard", f"{remote}/{branch}")
             if result is not None:
