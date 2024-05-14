@@ -1,4 +1,4 @@
-name: Python package
+name: Build & Test
 
 on:
   push:
@@ -34,7 +34,19 @@ jobs:
       - name: Regenerate requirements.txt with Pipreqs
         run: |
           pipreqs --force
+  
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Test with Unittest
+      - name: Set up Python 3.11.6
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.11.6
+
+      - name: Test interafaces/trustpilot.py
         run: |
-          python -m unittest discover -s tests
+          python -m unittest tests.test_trustpilot
