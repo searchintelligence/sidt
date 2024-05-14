@@ -10,6 +10,8 @@ from dataclasses import asdict, fields, dataclass, field
 import numpy as np
 import pandas as pd
 
+from pandas.api.types import is_datetime64_any_dtype
+
 from ..utils.data import humanise_string, computerise_string, excel_column_converter
 
 
@@ -131,6 +133,7 @@ class XLWriter():
             file_path (str): The file path for the output Excel file. Defaults to "xlwriter_output.xlsx".
         """
 
+        XLWriter.validate_file_path(file_path)
         self.file_path = file_path
         self.has_contents = False
         self.sheets = []
@@ -147,19 +150,46 @@ class XLWriter():
         description: str
         no_cols: int
         autofilter: bool = True
-        include_headers: bool = True
-        include_index: bool = False
+        show_index: bool = False
         extra_info: Dict[str, str] = field(default_factory=dict)
         column_widths: Union[int, List[int], Dict[str, int]] = field(default_factory=lambda: 15)
         wrap_cells: bool = False
         worksheet: Worksheet = None
         is_contents: bool = False
         humanise_headers: bool = False
+        enum_sheet_name: bool = True
+
+        def __post_init__(self):
+            self.validate_sheet_attributes()
+
+        def validate_sheet_attributes(self):
+            if not self.sheet_name:
+                raise ValueError("Sheet name cannot be empty.")
+            if not self.table_name:
+                raise ValueError("Table name cannot be empty.")
+            if self.df is None or self.df.empty:
+                raise ValueError("DataFrame cannot be empty.")
+            if not isinstance(self.column_widths, (int, list, dict)):
+                raise TypeError("Column widths must be an integer, list, or dictionary.")
+            if self.no_cols != len(self.df.columns):
+                raise ValueError("Number of columns in DataFrame does not match 'no_cols'.")
+            if not isinstance(self.autofilter, bool):
+                raise TypeError("Autofilter must be a boolean value.")
+            if not isinstance(self.show_index, bool):
+                raise TypeError("Show index must be a boolean value.")
+            if not isinstance(self.wrap_cells, bool):
+                raise TypeError("Wrap cells must be a boolean value.")
+            if not isinstance(self.is_contents, bool):
+                raise TypeError("Is contents must be a boolean value.")
+            if not isinstance(self.humanise_headers, bool):
+                raise TypeError("Humanise headers must be a boolean value.")
+            if not isinstance(self.enum_sheet_name, bool):
+                raise TypeError("Enum sheet name must be a boolean value.")
 
 
-    def add_sheet(self, df, sheet_name, title, description, extra_info={}, autofilter=False, _is_contents=False, 
+    def add_sheet(self, df, sheet_name, title, description, extra_info={}, autofilter=True, _is_contents=False, 
                   column_widths=None, wrap_cells=False, humanise_headers=True, position=-1, enum_sheet_name=True,
-                  default_col_width=15):
+                  default_col_width=15, index=False):
         """
         Add a DataFrame as a new sheet in the Excel file. Use after initialising the writer.
 
@@ -180,13 +210,9 @@ class XLWriter():
             humanise_headers (bool): Whether to humanize headers. Defaults to True.
             position (int): Position to insert the sheet. Defaults to -1 (append).
             enum_sheet_name (bool): Whether to enumerate the sheet name. Defaults to True.
+            index (bool): Whether to include the DataFrame index. Defaults to False.
         """
-        
-        # Enumerate the sheet name if required
-        if enum_sheet_name:
-            num_sheets = len(self.sheets)
-            sheet_name = f"{num_sheets + 1}. {sheet_name}"
-        
+                
         # Clean sheet name and table name
         sheet_name = humanise_string(sheet_name)
         sheet_name = computerise_string(sheet_name, truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
@@ -204,7 +230,7 @@ class XLWriter():
         # Create the sheet object
         sheet = XLWriter.Sheet(df=df, sheet_name=sheet_name, table_name=table_name, title=title, description=description, no_cols=no_cols, 
                                extra_info=extra_info, column_widths=column_widths, wrap_cells=wrap_cells, autofilter=autofilter, is_contents=_is_contents,
-                               humanise_headers=humanise_headers)
+                               humanise_headers=humanise_headers, show_index=index, enum_sheet_name=enum_sheet_name)
         
         # Insert the sheet at the specified position, defaults to append
         if position < 0:
@@ -224,6 +250,9 @@ class XLWriter():
             default_col_width (int): Default column width. Defaults to 15.
         """
 
+        # Finalise sheets before generating contents to ensure correct sheet names
+        self.finalise_sheets()
+
         # Get the main body contents df
         contents_df = self._get_contents_df()
 
@@ -235,8 +264,10 @@ class XLWriter():
         # Add contents sheet to the writer
         self.add_sheet(df=contents_df, sheet_name=sheet_name, title=title, default_col_width=default_col_width,
                        description="Contents Sheet", autofilter=False, column_widths=column_widths, 
-                       wrap_cells=True, position=0, enum_sheet_name=False, is_contents=True)
+                       wrap_cells=True, position=0, enum_sheet_name=False, _is_contents=True)
         self.has_contents = True
+        self.contents_title = title
+        self.contents_sheet_name = sheet_name
         
 
     def write(self):
@@ -245,8 +276,11 @@ class XLWriter():
         Should be called after adding all required sheets with add_sheet() and add_contents().
         """
 
+        # Explicitly finalise sheets if contents are not added
+        if not self.has_contents:
+            self.finalise_sheets()
+
         self._initialise_writer()
-        
         for sheet in self.sheets:
 
             # Create the worksheet if it doesn't exist
@@ -254,11 +288,21 @@ class XLWriter():
                 worksheet = self.writer.book.add_worksheet(sheet.sheet_name)
                 sheet.worksheet = worksheet
 
-            # Write the sheet title and data
             self._write_sheet_title(sheet)
             self._write_sheet_data(sheet)
 
         self.writer.close()
+
+
+    def finalise_sheets(self):
+        """
+        Processing for sheets once all have been added.
+        """
+
+        # Finalise the sheet names and titles
+        for i, sheet in enumerate(self.sheets):
+            if sheet.enum_sheet_name:
+                sheet.sheet_name = computerise_string(f"{i + 1}. {sheet.sheet_name}", truncate_length=31)
 
 
     def _initialise_writer(self):
@@ -327,7 +371,7 @@ class XLWriter():
             for row_num, sheet_name in enumerate(sheet_names): 
                 link_sheet_name = f"'{sheet_name}'!A1"
                 link_formula = f'=HYPERLINK("#{link_sheet_name}", "{sheet_name}")'
-                sheet.worksheet.write_formula(row_num+start_row, 0, link_formula, self.formats["hyperlink_contents"])
+                sheet.worksheet.write_formula(row_num+start_row+1, 0, link_formula, self.formats["hyperlink_contents"])
         
         # If sheet is not the contents sheet, offset by 1 row for back-link to contents
         else:
@@ -347,9 +391,11 @@ class XLWriter():
 
         # Determine the last column and row indices for the title section
         end_col_index = len(main_df.columns)
+        if sheet.show_index:
+            end_col_index += 1
         end_col_name = excel_column_converter(end_col_index)
         end_row_index = 2 + len(sheet.extra_info.keys())
-        
+                
         # Write, merge, and format title and description
         if end_col_index > 1:
             worksheet.merge_range(f"A1:{end_col_name}1", sheet.title, self.formats["title"])
@@ -371,8 +417,8 @@ class XLWriter():
         # Add hyperlink to return to the contents sheet
         if self.has_contents and not sheet.is_contents:
             if end_col_index > 1:
-                worksheet.merge_range(f"A{end_row_index+1}:{end_col_index}{end_row_index+1}", "Return to Contents")
-            link_sheet_name = f"'Contents'!A1"
+                worksheet.merge_range(f"A{end_row_index+1}:{end_col_name}{end_row_index+1}", "Return to Contents")
+            link_sheet_name = f"'{self.contents_sheet_name}'!A1"
             link_formula = f'=HYPERLINK("#{link_sheet_name}", "Return to Contents")'
             worksheet.write_formula(end_row_index, 0, link_formula, self.formats["hyperlink_sheet"])
 
@@ -392,8 +438,12 @@ class XLWriter():
         end_row = start_row + len(df)
         end_col = start_col + len(df.columns) - 1
 
+        # Handle index
+        if sheet.show_index:
+            end_col += 1
+
         # Write the DataFrame to Excel
-        df.to_excel(self.writer, sheet_name=sheet.sheet_name, startrow=start_row, startcol=start_col, index=sheet.include_index, header=sheet.include_headers)
+        df.to_excel(self.writer, sheet_name=sheet.sheet_name, startrow=start_row, startcol=start_col, index=sheet.show_index, header=True)
         worksheet = sheet.worksheet
 
         # Reformat column headers if configured to do so.
@@ -407,7 +457,7 @@ class XLWriter():
             "autofilter": sheet.autofilter,
             "name": sheet.table_name
         }
-        worksheet.add_table(start_row, start_col, end_row, end_col, table_config)
+        worksheet.add_table(first_row=start_row, first_col=start_col, last_row=end_row, last_col=end_col, options=table_config)
 
         # Apply text wrapping to headers
         for col_num, value in enumerate(df.columns.values):
@@ -421,6 +471,7 @@ class XLWriter():
             format = {}
             if sheet.wrap_cells:
                 format["text_wrap"] = True
+            format["num_format"] = data_format
 
             # Apply the format to the column
             format_obj = self.writer.book.add_format(format)
@@ -444,25 +495,29 @@ class XLWriter():
         if column.dropna().empty:
             return ""
         
+        # If the column is of datetime type
+        elif is_datetime64_any_dtype(column):
+            # You can customize this format string as needed
+            return "mm/dd/yyyy hh:mm:ss"
+
         # If all values are numeric
         elif column.dropna().apply(lambda x: isinstance(x, (int, float, np.float64, np.int64))).all():
             max_value = column.max()
 
             # If all values are integers
             if column.dropna().apply(lambda x: float(x).is_integer()).all():
-                format_str = "#,##0"
+                return "#,##0"
+            
             # If some values are floats
             else:
                 if max_value > 10000:
-                    format_str = "#,##0"
+                    return "#,##0"
                 else:
-                    format_str = "#,##0.00"
+                    return "#,##0.00"
 
         # If some values are non-numeric
         else:
-            format_str = "@" 
-        
-        return format_str
+            return "@" 
 
 
     @staticmethod
@@ -493,3 +548,20 @@ class XLWriter():
             column_widths = [default_width] * no_cols
         
         return column_widths
+
+
+    @staticmethod
+    def validate_file_path(file_path):
+        """
+        Validate the Excel file path's format and directory existence.
+        """
+
+        if not isinstance(file_path, str):
+            raise ValueError("file_path must be a string.")
+
+        if not file_path.endswith(".xlsx"):
+            raise ValueError("The file_path must end with '.xlsx' to indicate an Excel file.")
+
+        directory = os.path.dirname(file_path)
+        if directory and not os.path.exists(directory):
+            raise FileNotFoundError(f"The directory {directory} does not exist. Please create it or use an existing directory.")
