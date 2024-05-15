@@ -17,7 +17,7 @@ def process_reviews(response):
 def get_reviews(id):
     reviews = []
     headers = {'x-nextjs-data': '1'}
-    url = f"https://www.trustpilot.com/_next/data/businessunitprofile-consumersite-2.427.0/review/{id}.json?businessUnit={id}"
+    url = f"https://www.trustpilot.com/_next/data/businessunitprofile-consumersite-2.453.0/review/{id}.json?businessUnit={id}"
     r = make_request(url=url, method="GET", headers=headers).json()
     reviews.extend(process_reviews(r))
 
