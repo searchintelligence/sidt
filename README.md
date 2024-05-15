@@ -33,18 +33,18 @@ git checkout -b arek-dev
 <pre>
 <b>sidt/</b>
 ├─ <b>.github/</b>
-│  ├─ <b>workflows/</b>
-│  │  <i>Store for all Github workflows.</i>
+│  └─ <b>workflows/</b>
+│     <i>Store for all Github workflows.</i>
 ├─ <b>.vscode/</b>
 │  <i>Config for the VSCode testing panel.</i>
 ├─ <b>sidt/</b>
-│  <i>The package root directory</i>
+│  <i>The package root directory.</i>
 │  ├─ <b>data/</b>
 │  │  <i>Store for reusable data.</i>
 │  ├─ <b>interfaces/</b>
 │  │  <i>Code that interfaces with websites to collect data.</i>
-│  ├─ <b>utils/</b>
-│  │  <i>Reusable code for common functions.</i>
+│  └─ <b>utils/</b>
+│     <i>Reusable code for common functions.</i>
 ├─ <b>docs/</b>
 │  <i>Package documentation auto-generated from docstrings.</i>
 ├─ <b>tests/</b>
