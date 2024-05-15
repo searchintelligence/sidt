@@ -25,18 +25,24 @@ class TestTrustpilot(unittest.TestCase):
         self.assertIsInstance(results[0]["stars"], int)
         self.assertIsInstance(results[0]["trustScore"], float)
 
-    # def test_get_reviews(self):
-    #     reviews = get_reviews("yeezy.com")
-    #     self.assertIsInstance(reviews, list)
+    def test_get_reviews(self):
+        reviews = get_reviews("yeezy.com")
+        self.assertIsInstance(reviews, list)
 
-    #     self.assertIsInstance(reviews[0], dict)
-    #     self.assertIn("title", reviews[0])
-    #     self.assertIn("body", reviews[0])
-    #     self.assertIn("rating", reviews[0])
+        self.assertIsInstance(reviews[0], dict)
+        self.assertIn("title", reviews[0])
+        self.assertIn("body", reviews[0])
+        self.assertIn("rating", reviews[0])
 
-    #     self.assertIsInstance(reviews[0]["title"], str)
-    #     self.assertIsInstance(reviews[0]["body"], str)
-    #     self.assertIsInstance(reviews[0]["rating"], int)
+        self.assertIsInstance(reviews[0]["title"], str)
+        self.assertIsInstance(reviews[0]["body"], str)
+        self.assertIsInstance(reviews[0]["rating"], int)
+
+    def test_get_release_number(self):
+        release_number = get_release_number()
+        self.assertIsNotNone(release_number)
+        self.assertRegex(release_number, r"\d+\.\d+\.\d+")
+
 
 
 if __name__ == '__main__':

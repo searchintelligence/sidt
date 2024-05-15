@@ -1,9 +1,37 @@
+import re
 from ..utils.api import make_request
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
+def get_release_number():
+    """
+    Retrieves the current release number from the Trustpilot website.
+
+    Returns:
+        str: The current release number if found, None otherwise.
+    """
+    r = make_request("https://www.trustpilot.com/review/www.tripadvisor.com", method="GET").text
+    pattern = re.compile(r'"currentReleaseNumber":"businessunitprofile-consumersite@\d+\.\d+\.\d+')
+    match = pattern.search(r)
+    if match:
+        return match.group(0).split('@')[1]
+    else:
+        raise Exception("Failed to get release number")
+
 def process_reviews(response):
+    """
+    Process the reviews from the response and return a list of dictionaries containing the title, body, and rating.
+
+    Args:
+        response (dict): The response containing the reviews.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a review and contains the following keys:
+            - "title" (str): The title of the review.
+            - "body" (str): The body of the review.
+            - "rating" (int): The rating of the review.
+    """
     reviews = []
     for review in response["pageProps"]["reviews"]:
         reviews.append({
@@ -15,9 +43,19 @@ def process_reviews(response):
 
 
 def get_reviews(id):
+    """
+    Retrieves reviews for a given Trustpilot business unit ID.
+
+    Args:
+        id (str): The Trustpilot business unit ID.
+
+    Returns:
+        list: A list of reviews for the specified business unit ID.
+    """
     reviews = []
     headers = {'x-nextjs-data': '1'}
-    url = f"https://www.trustpilot.com/_next/data/businessunitprofile-consumersite-2.453.0/review/{id}.json?businessUnit={id}"
+    url = f"https://www.trustpilot.com/_next/data/businessunitprofile-consumersite-{get_release_number()}/review/{id}.json?businessUnit={id}"
+
     r = make_request(url=url, method="GET", headers=headers).json()
     reviews.extend(process_reviews(r))
 
@@ -26,12 +64,27 @@ def get_reviews(id):
         for p in tqdm(range(2, pages), leave=False):
             url += f"&?page={p}"
             r = make_request(url=url, method="GET", headers=headers).json()
-            reviews.append(process_reviews(r))
+            reviews.extend(process_reviews(r))
 
     return reviews
 
 
 def get_site_info(id: str):
+    """
+    Retrieves information about a site from Trustpilot.
+
+    Args:
+        id (str): The ID of the site.
+
+    Returns:
+        dict: A dictionary containing the following information:
+            - id (str): The ID of the site.
+            - name (str): The name of the site.
+            - review_count (int): The number of reviews for the site.
+            - rating_class (str): The rating class of the site.
+            - score (str): The score of the site.
+            - category (str): The category of the site, if available.
+    """
     url = f"https://www.trustpilot.com/review/{id}"
     r = make_request(url=url, method="GET").text
 
