@@ -32,6 +32,20 @@ class TestTrustpilot(unittest.TestCase):
         self.assertEqual(site_info.name, "Trustpilot")
         self.assertEqual(site_info.category, "Review Site")
 
+    def test_make_search(self):
+        results = make_search("trustpilot", 10, "US")
+        self.assertIsInstance(results, list)
+        self.assertEqual(len(results), 10)
+
+        self.assertEqual(results[0]["id"], "trustpilot.com")
+        self.assertEqual(results[0]["name"], "Trustpilot")
+
+        self.assertIsInstance(results[0]["numberOfReviews"], int)
+        self.assertGreater(results[0]["numberOfReviews"], 0)
+
+        self.assertIsInstance(results[0]["stars"], int)
+        self.assertIsInstance(results[0]["trustScore"], float)
+
 
 if __name__ == '__main__':
     unittest.main()

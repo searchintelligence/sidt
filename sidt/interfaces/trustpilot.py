@@ -63,3 +63,27 @@ def get_site_info(id, headers) -> Trustpilot:
     category = category_link.get_text(strip=True) if category_link else None
 
     return Trustpilot(id, name, review_count, rating_class, score, category)
+
+
+def make_search(query:str, result_size:int=100, country:str="US"):
+
+    if result_size > 100:
+        raise ValueError("result_size must be less than or equal to 100")
+    
+    results = []
+
+    url = f"https://www.trustpilot.com/api/consumersitesearch-api/businessunits/search?country={country}&pageSize={result_size}&query={query}"
+    r = make_request(url=url, method="GET").json()
+
+    for item in r["businessUnits"]:
+        results.append({
+            "id": item["identifyingName"],
+            "name": item["displayName"],
+            "numberOfReviews": item["numberOfReviews"],
+            "trustScore": item["score"]["trustScore"],
+            "stars": item["score"]["stars"],
+            "websiteUrl": item["websiteUrl"],
+            "verified": item["verified"],
+        })
+    
+    return results
