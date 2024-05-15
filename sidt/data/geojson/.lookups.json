@@ -1,0 +1,28 @@
+{
+    "geocode_params": {
+        "countries": {
+            "name": "countries",
+            "geo_file": "un_member_states.geojson"
+        },
+        "uk_local_authorities": {
+            "name": "uk_local_authorities",
+            "geo_file": "uk_local_authorities.geojson"
+        },
+        "europe_countries": {
+            "name": "europe_countries",
+            "geo_file": "un_member_states_europe.geojson"
+        },
+        "us_counties": {
+            "name": "us_counties",
+            "geo_file": "us_counties.geojson"
+        },
+        "us_states": {
+            "name": "us_states",
+            "geo_file": "us_states.geojson"
+        },
+        "us_primary_roads": {
+            "name": "us_primary_roads",
+            "geo_file": "us_primary_roads.geojson"
+        }
+    }
+}

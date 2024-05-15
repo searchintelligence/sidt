@@ -16,7 +16,7 @@ def nested_lookup(nested_item, lookup_keys):
 
     Example:
         data = response.json()  # Assume response.json() returns a list or dict
-        result = Tools.nested_lookup(data, [0, "key", 5, "title", "value"])
+        result = nested_lookup(data, [0, "key", 5, "title", "value"])
     """
 
     current = nested_item
@@ -95,7 +95,7 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
                        strip_all_whitespace=False, remove_problematic_chars=True, truncate_length=None,
                        to_case=None):
     """
-    Formats a string based on specified parameters to make it computer-readable and ensures consistent encoding.
+    Formats a string based on specified parameters to make it computer-readable.
 
     Args:
         s (str): The input string to clean.

@@ -133,7 +133,7 @@ class XLWriter():
             file_path (str): The file path for the output Excel file. Defaults to "xlwriter_output.xlsx".
         """
 
-        XLWriter.validate_file_path(file_path)
+        XLWriter._validate_file_path(file_path)
         self.file_path = file_path
         self.has_contents = False
         self.sheets = []
@@ -160,9 +160,9 @@ class XLWriter():
         enum_sheet_name: bool = True
 
         def __post_init__(self):
-            self.validate_sheet_attributes()
+            self._validate_sheet_attributes()
 
-        def validate_sheet_attributes(self):
+        def _validate_sheet_attributes(self):
             if not self.sheet_name:
                 raise ValueError("Sheet name cannot be empty.")
             if not self.table_name:
@@ -187,30 +187,37 @@ class XLWriter():
                 raise TypeError("Enum sheet name must be a boolean value.")
 
 
-    def add_sheet(self, df, sheet_name, title, description, extra_info={}, autofilter=True, _is_contents=False, 
+    def add_sheet(self, df, sheet_name, title="Data", description="", extra_info={}, autofilter=True, _is_contents=False, 
                   column_widths=None, wrap_cells=False, humanise_headers=True, position=-1, enum_sheet_name=True,
                   default_col_width=15, index=False):
         """
-        Add a DataFrame as a new sheet in the Excel file. Use after initialising the writer.
+        Adds a DataFrame as a new sheet in the Excel file.
 
         Args:
             df (pd.DataFrame): DataFrame to be written to the sheet.
             sheet_name (str): Name of the sheet.
-            title (str): Title of the sheet.
-            description (str): Description of the sheet.
+            title (str): Title of the sheet. Defaults to 'Data'.
+            description (str): Description of the sheet. Defaults to ''.
             extra_info (dict): Additional information for the sheet. Defaults to {}.
-            autofilter (bool): Whether to apply autofilter. Defaults to False.
+            autofilter (bool): Whether to apply autofilter. Defaults to True.
             column_widths (Union[int, List[int], Dict[int, int], None]): Specifies column widths.
-                - int: Applies the same width to all columns.
-                - List[int]: Specifies individual widths for each column.
-                - Dict[int, int]: Specifies widths for columns by their index.
-                - None: Uses the default column width.
+                Options are:
+                    'int' - Applies the same width to all columns,
+                    'List[int]' - Specifies individual widths for each column,
+                    'Dict[int, int]' - Specifies widths for columns by their index,
+                    'None' - Uses the default column width.
             default_col_width (int): Default column width. Defaults to 15.
             wrap_cells (bool): Whether to wrap text in cells. Defaults to False.
             humanise_headers (bool): Whether to humanize headers. Defaults to True.
             position (int): Position to insert the sheet. Defaults to -1 (append).
             enum_sheet_name (bool): Whether to enumerate the sheet name. Defaults to True.
             index (bool): Whether to include the DataFrame index. Defaults to False.
+
+        Example usage:
+            add_sheet(df, sheet_name="Revenue", title="Quarterly Revenue", description="Q1 Analysis",
+                    autofilter=True, column_widths=[10, 20, 30], default_col_width=12,
+                    wrap_cells=True, humanise_headers=False, position=0, enum_sheet_name=False,
+                    index=True)
         """
                 
         # Clean sheet name and table name
@@ -375,7 +382,9 @@ class XLWriter():
         
         # If sheet is not the contents sheet, offset by 1 row for back-link to contents
         else:
-            self._df_to_table(sheet.df, sheet, start_row=start_row+1)
+            if self.has_contents:
+                start_row += 1
+            self._df_to_table(sheet.df, sheet, start_row=start_row)
 
 
     def _write_sheet_title(self, sheet):
@@ -551,7 +560,7 @@ class XLWriter():
 
 
     @staticmethod
-    def validate_file_path(file_path):
+    def _validate_file_path(file_path):
         """
         Validate the Excel file path's format and directory existence.
         """
@@ -565,3 +574,65 @@ class XLWriter():
         directory = os.path.dirname(file_path)
         if directory and not os.path.exists(directory):
             raise FileNotFoundError(f"The directory {directory} does not exist. Please create it or use an existing directory.")
+
+
+    @staticmethod
+    def df_to_xlsx(df, file_path="xlwriter_output.xlsx", sheet_name="sheet1", **kwargs):
+        """
+        Simplifies the process of writing a single DataFrame to an Excel file without adding a contents page.
+
+        Args:
+            df (pd.DataFrame): DataFrame to be written.
+            file_path (str): Path to the output Excel file. Defaults to "xlwriter_output.xlsx".
+            sheet_name (str): Name of the Excel sheet. Defaults to "sheet1".
+
+        Keyword Args:
+            title (str): Title of the Excel sheet.
+            description (str): Description of the Excel sheet.
+            column_widths (Union[int, List[int], Dict[str, int]]): Specifies column widths.
+                'int' for uniform width, 'List[int]' for specific widths per column, 'Dict[str, int]' for named columns.
+            wrap_cells (bool): Whether to wrap text in cells. Defaults to False.
+            autofilter (bool): Whether to apply autofilter. Defaults to True.
+            humanise_headers (bool): Whether to humanize headers. Defaults to False.
+            index (bool): Whether to include the DataFrame index. Defaults to False.
+
+        Example usage:
+            df_to_xlsx(df, file_path="data_output.xlsx", sheet_name="Data", title="Summary Data", description="Detailed summary")
+        """
+
+        writer = XLWriter(file_path)
+        writer.add_sheet(df=df, sheet_name=sheet_name, enum_sheet_name=False, **kwargs)
+        writer.write()
+
+
+    @staticmethod
+    def dfs_to_xlsx(dfs, file_path="xlwriter_output.xlsx", with_contents=True, **kwargs):
+        """
+        Writes multiple DataFrames to a single Excel file, each DataFrame as a separate sheet, optionally including a contents page.
+
+        Args:
+            dfs (dict of {str: pd.DataFrame}): A dictionary where each key is the sheet name and each value is a DataFrame to be written to that sheet.
+            file_path (str): The file path where the Excel file will be saved. Defaults to 'xlwriter_output.xlsx'.
+            with_contents (bool): Whether to include a contents page that lists all sheets. Defaults to True.
+
+        Keyword Args:
+            All keyword arguments accepted by 'add_sheet' can be passed through here. For example:
+                title (str): Title of the Excel sheet. Defaults to the sheet name if not provided.
+                description (str): Description of the Excel sheet. Defaults to an empty string.
+                column_widths (Union[int, List[int], Dict[str, int]]): Column widths specification.
+                wrap_cells (bool): Whether to enable text wrapping within cells.
+                autofilter (bool): Whether to enable autofilter for the sheets.
+                humanise_headers (bool): Whether to humanize headers.
+                index (bool): Whether to include the DataFrame index.
+
+        Example usage:
+            dfs = {'Sales': sales_df, 'Inventory': inventory_df}
+            dfs_to_xlsx(dfs, file_path="report.xlsx", with_contents=True, title="Financial Data", autofilter=True)
+        """
+
+        writer = XLWriter(file_path)
+        for sheet_name, df in dfs.items():
+            writer.add_sheet(df=df, sheet_name=sheet_name, enum_sheet_name=True, **kwargs)
+        if with_contents:
+            writer.add_contents()
+        writer.write()

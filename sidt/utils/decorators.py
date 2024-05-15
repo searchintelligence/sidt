@@ -34,8 +34,8 @@ def retry(n_attempts=3, wait=0, exponential_backoff=False, randomise_wait=True, 
         return random.uniform(sleep_time * 0.8, sleep_time * 1.2) if use_random else sleep_time
 
 
-    def get_desc(tracker, attempt, n_attempts, exception, sleep_time, require_input):
-        """Update the progress tracker with the current status and error information."""
+    def get_desc(attempt, n_attempts, exception, sleep_time, require_input):
+        """Determine the current status and error information."""
         if attempt >= n_attempts:
             status = f"(No attempts remaining)"
         else:
@@ -74,7 +74,7 @@ def retry(n_attempts=3, wait=0, exponential_backoff=False, randomise_wait=True, 
                 except norm_catch_types as e:
                     attempts += 1
                     sleep_time = calculate_wait_time(attempts, wait, exponential_backoff, randomise_wait)
-                    desc = get_desc(tracker, attempts, n_attempts, e, sleep_time, require_input)                        
+                    desc = get_desc(attempts, n_attempts, e, sleep_time, require_input)                        
                     if show_tracker:
                         tracker.set_description(desc)
                     if attempts == n_attempts:
