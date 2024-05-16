@@ -11,12 +11,12 @@ def new_session():
     )
 
 
-def make_request(url, method="GET", headers="", cookies="", params=""):
+def make_request(url:str, method:str="GET", persistant:bool=True, headers:dict=None, cookies:dict=None, params:dict=None):
     session = new_session()
     while True:
-        response = session.get(url, headers=headers,
+        response = session.execute_request(url=url, method=method, headers=headers,
                                cookies=cookies, params=params)
-        if response.status_code != 200:
+        if response.status_code != 200 and persistant:
             tqdm.write(f"Error {response.status_code} requesting {url}")
             time.sleep(5)
         else:
