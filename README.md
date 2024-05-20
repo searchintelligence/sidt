@@ -59,7 +59,7 @@ git checkout -b arek-dev
 
 ## Examples
 
-### Tripadvisor [![Test interfaces/trustpilot](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml)
+### Trustpilot [![Test interfaces/trustpilot](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml)
 
 ```python
 from sidt.interfaces import trustpilot
