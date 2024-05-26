@@ -70,7 +70,7 @@ class CLIF():
         return f"{format_sequence}{text}{CLIF.RESET}"
 
 
-def dump(data, filename):
+def dump(data, filename="output"):
     # data must be a dataclass object or list of the same dataclass objects
 
     origin = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
