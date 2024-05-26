@@ -16,4 +16,4 @@ def get_hashtag_popularity(tag):
     try:
         return r["count"]
     except:
-        return "Erarcror"
+        return None
