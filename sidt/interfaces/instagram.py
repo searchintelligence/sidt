@@ -1,3 +1,4 @@
+import requests
 from ..utils.api import make_request
 
 cookies = {
@@ -17,3 +18,12 @@ def get_hashtag_popularity(tag):
         return r["count"]
     except:
         return None
+
+def get_profile_info(username):
+    url = f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}"
+
+    r = requests.request("GET", url, headers=headers).json()["data"]["user"]
+    return {
+        "follower_count": r["edge_followed_by"]["count"],
+        "following_count": r["edge_follow"]["count"],
+    }
