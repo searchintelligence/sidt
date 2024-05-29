@@ -98,3 +98,74 @@ for site in sites:
             "reviewRating": review["rating"]
         })
 ```
+
+### XLWriter
+
+```python
+import pandas as pd
+from sidt.utils.io import XLWriter
+
+# Dataframes to write
+
+df0 = pd.DataFrame({"Methodology": [""]})
+df1 = pd.DataFrame({"Index": [0, 1, 2], "Value": ["a", "b", "c"]})
+df2 = pd.DataFrame({
+    "Integers": range(1, 6),
+    "Big Numbers": [10000, 500000, 1000000, 5000000, 10000000],
+    "Text": ["Hello", "World", "This", "Is", "Example"]
+})
+
+
+""" Simple examples """
+
+# Write all three dataframes to a single file, using the same custom formatting for all sheets
+
+XLWriter.dfs_to_xlsx(
+    [df0, df1, df2],
+    with_contents=True,
+    file_path="output.xlsx",
+    humanise_headers=True,
+    column_widths=20
+    )
+
+# Write a single dataframe to a file, using the default formatting
+
+XLWriter.df_to_xlsx(df0)
+
+
+""" Advanced example """
+
+# Initialise writer with a filename
+
+writer = XLWriter("output.xlsx")
+
+# Add dataframes to writer one at a time, with unique formatting for each sheet
+
+writer.add_sheet(
+    df0, 
+    sheet_name="Methodology", 
+    title="Methodology", 
+    description="A sheet with a 'Methodology' header, with an empty cell to manually write a methodology into."
+    column_widths=[250],
+    wrap_cells=True,
+    position=0,
+    enum_sheet_name=False
+    )
+writer.add_sheet(
+    df1, 
+    sheet_name="Summary", 
+    title="Summary",
+    column_widths=25, 
+    extra_info={"Analysis by": "John Doe"}
+    )
+writer.add_sheet(
+    df2, 
+    sheet_name="Raw Data", 
+    autofilter=False
+    )
+
+# Generate a contents page and write the data
+
+writer.add_contents()
+writer.write()
+```
