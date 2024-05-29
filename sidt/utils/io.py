@@ -546,6 +546,7 @@ class XLWriter():
         Returns:
             List[int]: List of column widths.
         """
+        print(default_width)
 
         if isinstance(column_widths, int):
             column_widths = [column_widths] * no_cols

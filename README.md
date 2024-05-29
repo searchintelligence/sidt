@@ -99,7 +99,8 @@ for site in sites:
         })
 ```
 
-### XLWriter
+## XLWriter
+### Writes dataframes to clean excel files with advanced sheet-wise formatting options and an automatically generated contents page with navigation. Three examples of differing complexity given below.
 
 ```python
 import pandas as pd
@@ -121,7 +122,7 @@ df2 = pd.DataFrame({
 # Write all three dataframes to a single file, using the same custom formatting for all sheets
 
 XLWriter.dfs_to_xlsx(
-    [df0, df1, df2],
+    {"Methodology": df0, "Summary": df1, "Raw Data": df2},
     with_contents=True,
     file_path="output.xlsx",
     humanise_headers=True,
@@ -145,7 +146,7 @@ writer.add_sheet(
     df0, 
     sheet_name="Methodology", 
     title="Methodology", 
-    description="A sheet with a 'Methodology' header, with an empty cell to manually write a methodology into."
+    description="A sheet with a 'Methodology' header, with an empty cell to manually write a methodology into.",
     column_widths=[250],
     wrap_cells=True,
     position=0,
@@ -166,6 +167,9 @@ writer.add_sheet(
 
 # Generate a contents page and write the data
 
-writer.add_contents()
+writer.add_contents(stars=True)
 writer.write()
 ```
+
+![XLWriter Output](/resources/readme-files/xlwriter_output_contents.png)
+![XLWriter Output](/resources/readme-files/xlwriter_output_raw_data.png)
