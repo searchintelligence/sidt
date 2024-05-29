@@ -258,7 +258,7 @@ class XLWriter():
         """
 
         # Finalise sheets before generating contents to ensure correct sheet names
-        self.finalise_sheets()
+        self._finalise_sheets()
 
         # Get the main body contents df
         contents_df = self._get_contents_df()
@@ -285,7 +285,7 @@ class XLWriter():
 
         # Explicitly finalise sheets if contents are not added
         if not self.has_contents:
-            self.finalise_sheets()
+            self._finalise_sheets()
 
         self._initialise_writer()
         for sheet in self.sheets:
@@ -301,7 +301,7 @@ class XLWriter():
         self.writer.close()
 
 
-    def finalise_sheets(self):
+    def _finalise_sheets(self):
         """
         Processing for sheets once all have been added.
         """

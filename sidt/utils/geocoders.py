@@ -5,7 +5,6 @@ import pandas as pd
 import geopandas as gpd
 
 from ..utils.os import get_current_path
-from ..utils.io import CLIF
 
 
 class Geocoder():
