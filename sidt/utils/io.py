@@ -228,9 +228,9 @@ class XLWriter():
         extra_info = extra_info.copy()
                 
         # Clean sheet name and table name
-        sheet_name = humanise_string(sheet_name)
-        sheet_name = computerise_string(sheet_name, truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
-        table_name = computerise_string(sheet_name, replace_hyphens="_", strip_all_whitespace=True, alphanumeric_only=True,
+        original_sheet_name = sheet_name
+        sheet_name = computerise_string(humanise_string(sheet_name), truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
+        table_name = computerise_string(original_sheet_name, replace_hyphens="_", strip_all_whitespace=True, alphanumeric_only=True,
                                         no_leading_digit=True, replace_spaces="_", to_case="lower", allow_underscores=True)
         
         # Convert column headers to human readable format if required
