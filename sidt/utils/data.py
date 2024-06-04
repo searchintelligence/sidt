@@ -1,5 +1,4 @@
 import re
-import unicodedata
 
 
 def nested_lookup(nested_item, lookup_keys):
