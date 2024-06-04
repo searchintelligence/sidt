@@ -135,7 +135,7 @@ class XLWriter():
 
         if file_path is not None:
             XLWriter._validate_file_path(file_path)
-            self.file_path = file_path
+        self.file_path = file_path
         self.has_contents = False
         self.sheets = []
 
@@ -199,7 +199,7 @@ class XLWriter():
             sheet_name (str): Name of the sheet.
             title (str): Title of the sheet. Defaults to 'Data'.
             description (str): Description of the sheet. Defaults to ''.
-            extra_info (dict): Additional information for the sheet. Defaults to {}.
+            extra_info (dict, None): Additional information for the sheet. Defaults to {}.
             autofilter (bool): Whether to apply autofilter. Defaults to True.
             column_widths (Union[int, List[int], Dict[int, int], None]): Specifies column widths.
                 Options are:
@@ -220,6 +220,12 @@ class XLWriter():
                     wrap_cells=True, humanise_headers=False, position=0, enum_sheet_name=False,
                     index=True)
         """
+
+        # Prevent modifying original DataFrame
+        df = df.copy()
+        if extra_info is None:
+            extra_info = {}
+        extra_info = extra_info.copy()
                 
         # Clean sheet name and table name
         sheet_name = humanise_string(sheet_name)
@@ -292,8 +298,8 @@ class XLWriter():
             self.file_path = file_path
             XLWriter._validate_file_path(file_path)
         
-        # Raise an error if no file path has been given
-        if not self.file_path:
+        # Raise an error if self.file_path is undefined
+        if not hasattr(self, "file_path") or not self.file_path:
             raise ValueError("No file path provided. Please specify a file path in the constructor or the write() method.")
         
         # Raise an error if no sheets have been added
@@ -306,7 +312,7 @@ class XLWriter():
 
         # Check for large sheets and write to CSV if necessary
         to_remove = []
-        for i, sheet in enumerate(self.sheets_data):
+        for i, sheet in enumerate(self.sheets):
             if sheet.df.shape[0] > 1048576 or sheet.df.shape[1] > 16384:
                 to_remove.append(i)
                 base_name = os.path.splitext(self.file_path)[0]
@@ -341,8 +347,8 @@ class XLWriter():
         i = 0
         for sheet in self.sheets:
             if sheet.enum_sheet_name:
-                i += 1
                 sheet.sheet_name = computerise_string(f"{i + 1}. {sheet.sheet_name}", truncate_length=31)
+                i += 1
 
 
     def _initialise_writer(self):
@@ -579,7 +585,6 @@ class XLWriter():
         Returns:
             List[int]: List of column widths.
         """
-        print(default_width)
 
         if isinstance(column_widths, int):
             column_widths = [column_widths] * no_cols
