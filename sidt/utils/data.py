@@ -18,6 +18,8 @@ def nested_lookup(nested_item, lookup_keys):
         result = nested_lookup(data, [0, "key", 5, "title", "value"])
     """
 
+    dict = {}
+
     current = nested_item
     try:
         for key in lookup_keys:

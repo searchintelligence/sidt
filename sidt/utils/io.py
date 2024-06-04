@@ -125,16 +125,17 @@ class XLWriter():
         write(): Writes all added sheets to the Excel file and saves it.
     """
 
-    def __init__(self, file_path="xlwriter_output.xlsx"):
+    def __init__(self, file_path=None):
         """
         Initialize the XLWriter with a file path.
 
         Args:
-            file_path (str): The file path for the output Excel file. Defaults to "xlwriter_output.xlsx".
+            file_path (str): The file path for the output Excel file. Defaults to None. If not provided, should be provided in the write() method.
         """
 
-        XLWriter._validate_file_path(file_path)
-        self.file_path = file_path
+        if file_path is not None:
+            XLWriter._validate_file_path(file_path)
+            self.file_path = file_path
         self.has_contents = False
         self.sheets = []
 
@@ -277,15 +278,45 @@ class XLWriter():
         self.contents_sheet_name = sheet_name
         
 
-    def write(self):
+    def write(self, file_path=None):
         """
         Write all added sheets and the contents to the Excel file and saves it.
         Should be called after adding all required sheets with add_sheet() and add_contents().
+
+        Args:
+            file_path (str): The file path for the output Excel file. Defaults to None. If not provided, the file path from the constructor is used.
         """
+
+        # Use the provided file path if available
+        if file_path:
+            self.file_path = file_path
+            XLWriter._validate_file_path(file_path)
+        
+        # Raise an error if no file path has been given
+        if not self.file_path:
+            raise ValueError("No file path provided. Please specify a file path in the constructor or the write() method.")
+        
+        # Raise an error if no sheets have been added
+        if not self.sheets:
+            raise ValueError("No sheets have been added to the writer. Please add sheets using the add_sheet() method.")
 
         # Explicitly finalise sheets if contents are not added
         if not self.has_contents:
             self._finalise_sheets()
+
+        # Check for large sheets and write to CSV if necessary
+        to_remove = []
+        for i, sheet in enumerate(self.sheets_data):
+            if sheet.df.shape[0] > 1048576 or sheet.df.shape[1] > 16384:
+                to_remove.append(i)
+                base_name = os.path.splitext(self.file_path)[0]
+                file_name = f"{base_name}_{sheet['label']}.csv"
+                csv_file_path = os.path.join(self.file_path_dir, file_name)
+                sheet.df.to_csv(csv_file_path, index=False)
+        
+        # Removing after iteration to avoid modifying list during iteration
+        for index in sorted(to_remove, reverse=True):
+            del self.sheets[index]
 
         self._initialise_writer()
         for sheet in self.sheets:
@@ -306,9 +337,11 @@ class XLWriter():
         Processing for sheets once all have been added.
         """
 
-        # Finalise the sheet names and titles
-        for i, sheet in enumerate(self.sheets):
+        # Finalise the sheet names and titles by enumerating those which need it
+        i = 0
+        for sheet in self.sheets:
             if sheet.enum_sheet_name:
+                i += 1
                 sheet.sheet_name = computerise_string(f"{i + 1}. {sheet.sheet_name}", truncate_length=31)
 
 
