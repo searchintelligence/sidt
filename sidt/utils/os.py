@@ -35,3 +35,18 @@ def get_current_path():
     caller_path = caller_frame.filename
     caller_directory = os.path.dirname(os.path.abspath(caller_path))
     return caller_directory
+
+
+def get_root_path(current_directory=".", max_depth=3, look_for=[".git", "requirements.txt"]):
+    """
+    Returns the root directory path of the current project by traversing up from the current file directory
+    until it finds a directory containing both a .git folder and a requirements.txt file.
+
+    Returns:
+        str: The path to the root directory of the project, or None if no such directory is found.
+    """
+
+    for _ in range(max_depth):
+        if all(os.path.exists(os.path.join(current_directory, item)) for item in look_for):
+            return current_directory
+        current_directory = os.path.dirname(current_directory)

@@ -1,5 +1,4 @@
 import re
-import unicodedata
 
 
 def nested_lookup(nested_item, lookup_keys):
@@ -18,6 +17,8 @@ def nested_lookup(nested_item, lookup_keys):
         data = response.json()  # Assume response.json() returns a list or dict
         result = nested_lookup(data, [0, "key", 5, "title", "value"])
     """
+
+    dict = {}
 
     current = nested_item
     try:
@@ -92,8 +93,8 @@ def excel_column_converter(value):
     
 
 def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_digit=False,
-                       strip_all_whitespace=False, remove_problematic_chars=True, truncate_length=None,
-                       to_case=None):
+                       strip_all_whitespace=False, remove_problematic_chars=False, truncate_length=None,
+                       to_case=None, alphanumeric_only=False, allow_underscores=True):
     """
     Formats a string based on specified parameters to make it computer-readable.
 
@@ -109,6 +110,8 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
             - str: Removes characters specified in the provided string, e.g., "#$%&".
         truncate_length (int, None): If specified, truncates the string to this length.
         to_case (str, None): If 'lower' or 'upper', converts the string to the specified case.
+        alphanumeric_only (bool): If True, removes all non-alphanumeric characters, allows underscores.
+        allow_underscores (bool): If False, removes underscores.
     """
 
     if strip_all_whitespace:
@@ -134,9 +137,15 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
     elif remove_problematic_chars is True:
         default_problematic = r'\\/*?:\[\]"<>|'
         s = re.sub("[" + re.escape(default_problematic) + "]", "", s)
+    
+    if alphanumeric_only:
+        s = re.sub(r"[^a-zA-Z0-9_]", "", s)
 
     if truncate_length is not None and len(s) > truncate_length:
         s = s[:truncate_length]
+    
+    if not allow_underscores:
+        s = s.replace("_", "")
 
     return s
 

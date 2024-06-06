@@ -177,3 +177,32 @@ class GitController():
                 print("Failed to reset local branch.")
         else:
             print("Local branch is already up to date with the remote branch.")
+
+
+    def pip_update_from_requirements(self, force_update_sidt=True):
+        """Update all installed packages to the latest versions specified in the requirements.txt file.
+        
+        Args:
+            force_include_sidt (bool): Whether to force reinstall the SIDT package from its Git repository.
+        """
+        
+        print("Updating installed packages to match requirements.txt...")
+        try:
+            # First, update packages from requirements.txt
+            result = subprocess.run(["pip", "install", "-r", f"{self.path}/requirements.txt", "--upgrade"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if result.returncode == 0:
+                print("Packages updated successfully.")
+            else:
+                print(f"Failed to update packages: {result.stderr}")
+
+            # Optionally install SIDT from Git
+            if force_update_sidt:
+                print("Installing SIDT from Git repository...")
+                sidt_result = subprocess.run(["pip", "install", "git+https://github.com/searchintelligence/sidt.git", "--force-reinstall", "--no-deps"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                if sidt_result.returncode == 0:
+                    print("SIDT installed successfully.")
+                else:
+                    print(f"Failed to install SIDT: {sidt_result.stderr}")
+
+        except Exception as e:
+            print(f"Exception occurred: {str(e)}")
