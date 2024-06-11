@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+import setuptools_scm
 
 # Read the contents of the readme file for the setup desc
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -10,7 +11,16 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="sidt",
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
     license="MIT",
     packages=find_packages(),
     install_requires=requirements,
+    package_data={
+        "": ["*.json", "*.csv", "*.txt", "*.geojson", "*.md"],
+        "sidt": ["data/*.*"]
+    },
+    include_package_data=True,
+    long_description=long_description,
+    long_description_content_type="text/markdown"
 )
