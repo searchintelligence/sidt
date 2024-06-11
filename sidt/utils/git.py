@@ -1,4 +1,8 @@
+import sys
+import time
 import subprocess
+
+from sidt.utils.io import CLIF
 
 class GitController():
     """
@@ -206,3 +210,73 @@ class GitController():
 
         except Exception as e:
             print(f"Exception occurred: {str(e)}")
+    
+
+    @staticmethod
+    def check_for_app_updates(root_dir, allow_force_update=True):
+        """
+        Check for updates to a git repository and update if necessary. Shortcut method to check for updates and prompt the user to update.
+        args:
+            root_dir (str): The root directory of the project containing the Git repository.
+            allow_force_update (bool): Whether to allow the user to force update the app.
+        return:
+            GitController: The GitController object for the project. Contains commit information and update status.
+        """
+
+        print(CLIF.fmt(f"\n\nChecking Github for updates to the app...", CLIF.Format.BOLD, CLIF.Color.GREEN))
+        git = GitController(root_dir)
+        
+        # If the app is up to date, continue
+        if not git.is_outdated:
+            print(CLIF.fmt(f"\nApp is up to date. Continuing...", CLIF.Format.BOLD, CLIF.Color.GREEN))
+            time.sleep(1)
+            return git
+
+        # If the app is outdated, prompt the user to update
+        print(f"Your commit: {git.local_commit['date']} - {git.local_commit['message']}")
+        print(f"Latest commit: {git.local_commit['date']} - {git.remote_commit['message']} ({git.commits_behind} commits ahead)")
+        print(CLIF.fmt(f"The app is outdated. Please update the app to the latest version.", CLIF.Format.BOLD, CLIF.Color.YELLOW))
+
+        # Allow the user to either continue with the outdated app or exit if allow_force_update is False
+        if not allow_force_update:
+            cont = input(
+                CLIF.fmt(f"\nType 'y' to continue with the outdated app or any other key to exit.\n", CLIF.Format.BOLD, CLIF.Color.MAGENTA)
+                )
+            if cont.lower() != "y":
+                print(CLIF.fmt(f"\nApp Aborted", CLIF.Format.BOLD, CLIF.Color.RED))
+                sys.exit()
+
+        # If force update is allowed, prompt the user to continue, force update, or exit
+        cont = input(
+            CLIF.fmt(f"\nType 'y' to continue with the outdated app, 'f' to force update, or any other key to exit.\n", CLIF.Format.BOLD, CLIF.Color.MAGENTA)
+            )
+        
+        # Exit if user does not want to continue
+        if cont.lower() not in ["y", "f"]:
+            print(CLIF.fmt(f"\nApp Aborted", CLIF.Format.BOLD, CLIF.Color.RED))
+            sys.exit()
+        
+        # Force update the app if user chooses to
+        if cont.lower() == "f":
+
+            # Confirm force update
+            conf = input(
+                CLIF.fmt(f"\nWarning - Force updating will reset the app code to the latest version.\n", CLIF.Color.RED) +
+                "This will delete your local changes and synchronise your code with the most recent version.\nYour projects and config files will not be affected.\n" +
+                CLIF.fmt(f"\nAre you sure you want to force update the app? Type 'y' to confirm.\n", CLIF.Format.BOLD, CLIF.Color.MAGENTA)
+                )
+            if conf.lower() == "y":
+                
+                # Reset the app to the latest version
+                git.hard_reset_to_remote()
+
+                # Update pip requirements
+                print(CLIF.fmt(f"\nUpdating pip requirements...", CLIF.Format.BOLD, CLIF.Color.GREEN))
+                git.pip_update_from_requirements()
+
+                print(CLIF.fmt(f"\nApp updated to latest version. Run again to continue with updated app.", CLIF.Format.BOLD, CLIF.Color.GREEN))
+            print(CLIF.fmt(f"\nApp Aborted", CLIF.Format.BOLD, CLIF.Color.RED))
+            sys.exit()
+
+        # Continue with outdated app
+        return git
