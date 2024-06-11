@@ -111,7 +111,7 @@ class Geocoder():
 
 
     @staticmethod
-    def find_nearest_regions(df, package_gdf="countries", gdf=None):
+    def find_nearest_regions(df, package_gdf="countries", gdf=None, return_gdf=False):
         """
         Finds the nearest geographic regions to the coordinates in the provided DataFrame.
 
@@ -129,11 +129,14 @@ class Geocoder():
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
+        
+        if return_gdf:
+            return results, geocoder.gdf
         return results
 
 
     @staticmethod
-    def find_containing_regions(df, package_gdf="countries", gdf=None):
+    def find_containing_regions(df, package_gdf="countries", gdf=None, return_gdf=False):
         """
         Identifies geographic regions from the provided data sources that contain the coordinates specified in the DataFrame.
 
@@ -157,11 +160,14 @@ class Geocoder():
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
+
+        if return_gdf:
+            return results, geocoder.gdf
         return results
 
 
     @staticmethod
-    def find_regions_within_distance(df, distance=1000, package_gdf="countries", gdf=None):
+    def find_regions_within_distance(df, distance=1000, package_gdf="countries", gdf=None, return_gdf=False):
         """
         Finds geographic regions that are within a specified distance from the coordinates in the DataFrame.
         If the gdf describe lines or polygons, the distance is calculated as the minimum distance to the boundary.
@@ -184,11 +190,14 @@ class Geocoder():
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
+
+        if return_gdf:
+            return results, geocoder.gdf
         return results
 
 
     @staticmethod
-    def find_all_containing_regions(df, package_gdf="countries", gdf=None):
+    def find_all_containing_regions(df, package_gdf="countries", gdf=None, return_gdf=False):
         """
         NOT YET IMPLEMENTED
         Identifies all geographic regions from the provided data sources that contain each coordinate in the DataFrame.
@@ -213,11 +222,14 @@ class Geocoder():
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
+
+        if return_gdf:
+            return results, geocoder.gdf
         return results
     
 
     @staticmethod
-    def find_all_regions_within_distance(df, distance=1000, package_gdf="countries", gdf=None):
+    def find_all_regions_within_distance(df, distance=1000, package_gdf="countries", gdf=None, return_gdf=False):
         """
         NOT YET IMPLEMENTED
         Finds all geographic regions that are within a specified distance from each coordinate in the DataFrame.
@@ -241,6 +253,9 @@ class Geocoder():
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
+
+        if return_gdf:
+            return results, geocoder.gdf
         return results
     
 
