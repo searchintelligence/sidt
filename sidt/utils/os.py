@@ -16,6 +16,7 @@ def open_dir(target_dir, return_pid=False):
 
     process = None
     if sys.platform == "win32":
+        target_dir = target_dir.replace('/', '\\')
         process = subprocess.Popen(["explorer", target_dir])
     elif sys.platform == "darwin":
         process = subprocess.Popen(["open", target_dir])
