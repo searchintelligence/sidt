@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import setuptools_scm
 
 # Read the contents of the readme file for the setup desc
 with open("README.md", "r", encoding="utf-8") as fh:
