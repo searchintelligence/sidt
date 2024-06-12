@@ -140,12 +140,12 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
     
     if alphanumeric_only:
         s = re.sub(r"[^a-zA-Z0-9_]", "", s)
-
-    if truncate_length is not None and len(s) > truncate_length:
-        s = s[:truncate_length]
     
     if not allow_underscores:
         s = s.replace("_", "")
+
+    if truncate_length is not None and len(s) > truncate_length:
+        s = s[:truncate_length]
 
     return s
 

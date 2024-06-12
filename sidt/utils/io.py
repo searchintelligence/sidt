@@ -154,6 +154,8 @@ class XLWriter():
         show_index: bool = False
         extra_info: Dict[str, str] = field(default_factory=dict)
         column_widths: Union[int, List[int], Dict[str, int]] = field(default_factory=lambda: 15)
+        tab_color: str = None
+        hidden: bool = False
         wrap_cells: bool = False
         worksheet: Worksheet = None
         is_contents: bool = False
@@ -186,11 +188,15 @@ class XLWriter():
                 raise TypeError("Humanise headers must be a boolean value.")
             if not isinstance(self.enum_sheet_name, bool):
                 raise TypeError("Enum sheet name must be a boolean value.")
+            if not isinstance(self.hidden, bool):
+                raise TypeError("Hidden must be a boolean value.")
+            if not isinstance(self.tab_color, (str, type(None))):
+                raise TypeError("Tab color must be a string or None.")
 
 
     def add_sheet(self, df, sheet_name, title="Data", description="", extra_info={}, autofilter=True, _is_contents=False, 
                   column_widths=None, wrap_cells=False, humanise_headers=True, position=-1, enum_sheet_name=True,
-                  default_col_width=15, index=False):
+                  default_col_width=15, index=False, tab_color=None, hidden=False):
         """
         Adds a DataFrame as a new sheet in the Excel file.
 
@@ -208,6 +214,8 @@ class XLWriter():
                     'Dict[int, int]' - Specifies widths for columns by their index,
                     'None' - Uses the default column width.
             default_col_width (int): Default column width. Defaults to 15.
+            tab_color (str): Color of the tab. Defaults to None.
+            hidden (bool): Whether to hide the sheet. Defaults to False.
             wrap_cells (bool): Whether to wrap text in cells. Defaults to False.
             humanise_headers (bool): Whether to humanize headers. Defaults to True.
             position (int): Position to insert the sheet. Defaults to -1 (append).
@@ -244,7 +252,7 @@ class XLWriter():
         # Create the sheet object
         sheet = XLWriter.Sheet(df=df, sheet_name=sheet_name, table_name=table_name, title=title, description=description, no_cols=no_cols, 
                                extra_info=extra_info, column_widths=column_widths, wrap_cells=wrap_cells, autofilter=autofilter, is_contents=_is_contents,
-                               humanise_headers=humanise_headers, show_index=index, enum_sheet_name=enum_sheet_name)
+                               humanise_headers=humanise_headers, show_index=index, enum_sheet_name=enum_sheet_name, tab_color=tab_color, hidden=hidden)
         
         # Insert the sheet at the specified position, defaults to append
         if position < 0:
@@ -306,10 +314,6 @@ class XLWriter():
         if not self.sheets:
             raise ValueError("No sheets have been added to the writer. Please add sheets using the add_sheet() method.")
 
-        # Explicitly finalise sheets if contents are not added
-        if not self.has_contents:
-            self._finalise_sheets()
-
         # Check for large sheets and write to CSV if necessary
         to_remove = []
         for i, sheet in enumerate(self.sheets):
@@ -319,6 +323,10 @@ class XLWriter():
                 file_name = f"{base_name}_{sheet['label']}.csv"
                 csv_file_path = os.path.join(self.file_path_dir, file_name)
                 sheet.df.to_csv(csv_file_path, index=False)
+
+        # Explicitly finalise sheets if contents are not added
+        if not self.has_contents:
+            self._finalise_sheets()
         
         # Removing after iteration to avoid modifying list during iteration
         for index in sorted(to_remove, reverse=True):
@@ -424,6 +432,14 @@ class XLWriter():
             if self.has_contents:
                 start_row += 1
             self._df_to_table(sheet.df, sheet, start_row=start_row)
+        
+        # Set the tab color if specified
+        if sheet.tab_color:
+            sheet.worksheet.set_tab_color(sheet.tab_color)
+        
+        # Hide the sheet if specified
+        if sheet.hidden:
+            sheet.worksheet.hide()
 
 
     def _write_sheet_title(self, sheet):
