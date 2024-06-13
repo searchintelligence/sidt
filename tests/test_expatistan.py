@@ -3,7 +3,7 @@ import unittest
 from sidt.interfaces.expatistan import *
 
 
-class TestTrustpilot(unittest.TestCase):
+class TestExpatistan(unittest.TestCase):
 
     def test_search_by_city(self):
         results = search_by_city("lond")
