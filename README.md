@@ -2,9 +2,11 @@
 
 [![Build](https://github.com/searchintelligence/sidt/actions/workflows/build.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/build.yml)
 
+[![Test interfaces/expatistan](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml)
+[![Test interfaces/instagram](https://github.com/searchintelligence/sidt/actions/workflows/test-instagram.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-instagram.yml)
 [![Test interfaces/tripadvisor](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml)
 [![Test interfaces/trustpilot](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml)
-[![Test interfaces/expatistan](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml)
+
 
 ### For General Usage
 If you want to just use the library and don't plan to contribute:
@@ -93,6 +95,42 @@ for city in cities:
     cost_of_living = expatistan.get_cost_of_living(id)
     dozen_eggs = cost_of_living["12 eggs, large"]
     output.append(f"{city}: {dozen_eggs}")
+```
+
+### Instagram [![Test interfaces/instagram](https://github.com/searchintelligence/sidt/actions/workflows/test-instagram.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-instagram.yml)
+
+```python
+from sidt.interfaces import instagram
+
+# Get the popularity of a list of hashtags
+
+hashtags = [
+    "python",
+    "data",
+    "datascience",
+    "machinelearning",
+]
+
+output = []
+for hashtag in hashtags:
+    popularity = instagram.get_hashtag_popularity(hashtag)
+    output.append((hashtag, popularity))
+
+# Get the follower and following count of a list of profiles
+
+profiles = [
+    "nasa",
+    "therock",
+    "instagram",
+    "leonardodicaprio"
+]
+
+output = []
+for profile in profiles:
+    info = instagram.get_profile_info(profile)
+    followers = info["follower_count"]
+    following = info["following_count"]
+    output.append((profile, followers, following))
 ```
 
 ### Tripadvisor [![Test interfaces/tripadvisor](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml)
