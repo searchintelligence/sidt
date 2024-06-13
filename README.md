@@ -73,6 +73,28 @@ git checkout -b arek-dev
 
 # Scraping Examples
 
+### Expatistan [![Test interfaces/expatistan](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistanr.yml)
+
+```python
+from sidt.interfaces import expatistan
+
+cities = [
+    "London",
+    "Warsaw",
+    "Rome",
+    "Zurich"
+]
+
+# Find the price of a dozen eggs in each city
+
+output = []
+for city in cities:
+    id = expatistan.search_by_city(city)[0]["id"]
+    cost_of_living = expatistan.get_cost_of_living(id)
+    dozen_eggs = cost_of_living["12 eggs, large"]
+    output.append(f"{city}: {dozen_eggs}")
+```
+
 ### Tripadvisor [![Test interfaces/tripadvisor](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml)
 
 ```python
