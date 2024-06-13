@@ -1,33 +1,46 @@
 # SI Data Tools
 
 [![Build](https://github.com/searchintelligence/sidt/actions/workflows/build.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/build.yml)
+
+[![Test interfaces/tripadvisor](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml)
 [![Test interfaces/trustpilot](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml)
 [![Test interfaces/expatistan](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-expatistan.yml)
 
-### Usage
+### For General Usage
+If you want to just use the library and don't plan to contribute:
 
-Install Using:
+1. Install the library using pip
 ```bash
 pip install git+https://github.com/searchintelligence/sidt.git
 ```
 
-Update Using:
+2. Update it as you would any other library
 ```bash
-pip install git+https://github.com/searchintelligence/sidt.git --force-reinstall --no-deps
+pip install sidt -U
 ```
 
-### Development
+### For Developing and Contributing to the Library
+If you want to use the library and contribute code to it:
 
-Clone this repo and install it with the edit flag:
+0. Remove sidt if you already have it installed using method above
+
+```bash
+pip uninstall sidt
+```
+
+1. Clone this repo and install it in edit mode:
 ```bash
 git clone https://github.com/searchintelligence/sidt
-pip install -e /path/to/local/repo
+pip install -e /path/to/local/clone
 ```
 
-Create a personal development branch and switch to it:
+2. Create a personal development branch and switch to it:
 ```bash
 git checkout -b arek-dev
 ```
+3. Code on your dev branch and create pull requests to the main branch containing finalised code.
+4. Fetch on the main branch to update your local repo with any new changes.
+5. Merge the main branch onto your dev branch when convenient in order to keep it up-to-date.
 
 ### Project Structure
 
@@ -58,7 +71,32 @@ git checkout -b arek-dev
 └─ <b>LICENSE</b>
 </pre>
 
-## Examples
+# Scraping Examples
+
+### Tripadvisor [![Test interfaces/tripadvisor](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-tripadvisor.yml)
+
+```python
+from sidt.interfaces import tripadvisor
+
+restaurants = [
+    "Smokestak",
+    "Jumak39",
+    "Bouchon Racine",
+    "Akoko"
+]
+
+# Collect the ratings, number of reviews containing "clean", and French reviews for each restaurant
+
+output = []
+for restaurant in restaurants:
+    id = tripadvisor.search(restaurant)[0]["id"]
+    reviews_details = tripadvisor.get_review_details(id)
+    rating = reviews_details["rating"]
+    try: french_reviews = reviews_details["language_aggregations"]["fr"]
+    except: french_reviews = 0
+    clean_reviews = tripadvisor.get_filtered_review_count(id, "clean")
+    output.append((restaurant, rating, clean_reviews, french_reviews))
+```
 
 ### Trustpilot [![Test interfaces/trustpilot](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml/badge.svg)](https://github.com/searchintelligence/sidt/actions/workflows/test-trustpilot.yml)
 
@@ -84,7 +122,7 @@ for site in sites:
         "score": info["score"]
     })
 
-# Collect every review for each site
+# Collect all reviews for each site
 
 output = []
 for site in sites:
@@ -99,8 +137,11 @@ for site in sites:
         })
 ```
 
-## XLWriter
-### Writes dataframes to clean excel files with advanced sheet-wise formatting options and an automatically generated contents page with navigation. Three examples of differing complexity given below.
+# Utility Examples
+
+### XLWriter
+
+Writes dataframes to clean excel files with advanced sheet-wise formatting options and an automatically generated contents page with navigation. Three examples of differing complexity given below.
 
 ```python
 import pandas as pd
