@@ -21,6 +21,14 @@ class TestInstagram(unittest.TestCase):
         self.assertGreater(info["follower_count"], 0)
         self.assertGreater(info["following_count"], 0)
         print(info)
+    
+    def test_get_inzpire_data(self):
+        data = get_inzpire_data("drake.maye", currency="USD", posts=1, stories=1)
+        print(data)
+    
+    def test_get_picuki_data(self):
+        data = get_picuki_data("dariusmuasau")
+        print(data)
 
 
 if __name__ == '__main__':
