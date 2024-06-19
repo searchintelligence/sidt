@@ -212,8 +212,8 @@ def count_keywords(text, keywords, case_sensitive=False, whole_words_only=True, 
         clean_first (bool, optional): Whether to clean the text before searching. Removes non-alphanumeric characters. Defaults to True.
 
     Returns:
-        list: A list of tuples containing the keyword and the count of occurrences in each text.
-        [(text, {keyword: count, ...}), ...]
+        A list of dictionaries, each containing the original text, cleaned text, keyword counts, and statistics.
+        [ {"text": str, "cleaned": str, "counts": {str: int, ...}, "total_count": int, "total_unique": int, "num_words": int, "has_keywords": bool}, ... ]
     """
     
     # Validate inputs
@@ -228,8 +228,8 @@ def count_keywords(text, keywords, case_sensitive=False, whole_words_only=True, 
 
     # Clean text and keywords
     if clean_first:
-        cleaned_texts = [computerise_string(t, alphanumeric_only=True, to_case=None if case_sensitive else "lower") for t in text]
-        cleaned_keywords = [computerise_string(k, alphanumeric_only=True, to_case=None if case_sensitive else "lower") for k in keywords]
+        cleaned_texts = [computerise_string(t, alphanumeric_only=True, to_case=None if case_sensitive else "lower", strip_all_whitespace=True) for t in text]
+        cleaned_keywords = [computerise_string(k, alphanumeric_only=True, to_case=None if case_sensitive else "lower", strip_all_whitespace=True) for k in keywords]
     else:
         cleaned_texts = text
         cleaned_keywords = keywords
@@ -244,6 +244,16 @@ def count_keywords(text, keywords, case_sensitive=False, whole_words_only=True, 
             else:
                 pattern = re.escape(keyword)
             counts[keyword] = len(re.findall(pattern, cleaned))
-        results.append((original, counts))
+
+        # Get overall text statistics
+        total_count = sum(counts.values())
+        total_unique = len([k for k, v in counts.items() if v > 0])
+        num_words = len(cleaned.split())
+        has_keywords = total_count > 0
+
+        results.append({
+            "text": original, "cleaned": cleaned, "counts": counts, "total_count": total_count, 
+            "total_unique": total_unique, "num_words": num_words, "has_keywords": has_keywords
+            })
 
     return results
