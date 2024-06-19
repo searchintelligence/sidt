@@ -110,7 +110,7 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
             - str: Removes characters specified in the provided string, e.g., "#$%&".
         truncate_length (int, None): If specified, truncates the string to this length.
         to_case (str, None): If 'lower' or 'upper', converts the string to the specified case.
-        alphanumeric_only (bool): If True, removes all non-alphanumeric characters, allows underscores.
+        alphanumeric_only (bool): If True, removes all non-alphanumeric characters, allows underscores and spaces.
         allow_underscores (bool): If False, removes underscores.
     """
 
@@ -139,7 +139,7 @@ def computerise_string(s, replace_spaces=None, replace_hyphens=None, no_leading_
         s = re.sub("[" + re.escape(default_problematic) + "]", "", s)
     
     if alphanumeric_only:
-        s = re.sub(r"[^a-zA-Z0-9_]", "", s)
+        s = re.sub(r"[^a-zA-Z0-9_ ]", "", s)
     
     if not allow_underscores:
         s = s.replace("_", "")
@@ -198,3 +198,52 @@ def humanise_string(s, replace_underscores=True, uncapitalised_words=None, repla
             words[i] = word.capitalize()
 
     return " ".join(words)
+
+
+def count_keywords(text, keywords, case_sensitive=False, whole_words_only=True, clean_first=True):
+    """
+    Count the occurrences of keywords in the given text.
+
+    Args:
+        text (str or list): The text or list of texts to search for keywords.
+        keywords (str or list): The keyword or list of keywords to search for.
+        case_sensitive (bool, optional): Whether to perform a case-sensitive search. Defaults to False.
+        whole_words_only (bool, optional): Whether to match whole words only. Defaults to True.
+        clean_first (bool, optional): Whether to clean the text before searching. Removes non-alphanumeric characters. Defaults to True.
+
+    Returns:
+        list: A list of tuples containing the keyword and the count of occurrences in each text.
+        [(text, {keyword: count, ...}), ...]
+    """
+    
+    # Validate inputs
+    if isinstance(text, str):
+        text = [text]
+    if isinstance(keywords, str):
+        keywords = [keywords]
+    if not text or not keywords:
+        return []
+    if not isinstance(text, list) or not isinstance(keywords, list):
+        raise ValueError("text and keywords must be strings or lists of strings.")
+
+    # Clean text and keywords
+    if clean_first:
+        cleaned_texts = [computerise_string(t, alphanumeric_only=True, to_case=None if case_sensitive else "lower") for t in text]
+        cleaned_keywords = [computerise_string(k, alphanumeric_only=True, to_case=None if case_sensitive else "lower") for k in keywords]
+    else:
+        cleaned_texts = text
+        cleaned_keywords = keywords
+
+    # Search for keywords
+    results = []
+    for original, cleaned in zip(text, cleaned_texts):
+        counts = {}
+        for keyword in cleaned_keywords:
+            if whole_words_only:
+                pattern = r"\b" + re.escape(keyword) + r"\b"
+            else:
+                pattern = re.escape(keyword)
+            counts[keyword] = len(re.findall(pattern, cleaned))
+        results.append((original, counts))
+
+    return results
