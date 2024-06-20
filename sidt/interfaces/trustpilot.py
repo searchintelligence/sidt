@@ -61,9 +61,8 @@ def get_reviews(id):
 
     pages = r["pageProps"]["filters"]["pagination"]["totalPages"]
     if pages > 1:
-        for p in tqdm(range(2, pages), leave=False):
-            url += f"&?page={p}"
-            r = make_request(url=url, method="GET", headers=headers).json()
+        for p in tqdm(range(2, pages+1), leave=False):
+            r = make_request(url=f"{url}&page={p}", method="GET", headers=headers).json()
             reviews.extend(process_reviews(r))
 
     return reviews
