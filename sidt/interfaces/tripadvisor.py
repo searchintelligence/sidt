@@ -21,6 +21,16 @@ def us_cities():
     with open('sidt/data/tripadvisor/us_city_ids.json') as f:
         return json.load(f)
 
+def canada_cities():
+    """
+    Returns a dictionary containing the Canadian city IDs and their corresponding names.
+
+    Returns:
+        dict: A dictionary where the keys are the city IDs and the values are the city names.
+    """
+    with open('sidt/data/tripadvisor/canada_city_ids.json') as f:
+        return json.load(f)
+
 
 def search(query: str, loc_types: list = None):
     """

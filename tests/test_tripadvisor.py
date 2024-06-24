@@ -18,6 +18,12 @@ class TestTripadvisor(unittest.TestCase):
         self.assertIsInstance(cities, dict)
         self.assertGreater(len(cities), 0)
         print(cities)
+    
+    def test_canada_cities(self):
+        cities = canada_cities()
+        self.assertIsInstance(cities, dict)
+        self.assertGreater(len(cities), 0)
+        print(cities)
 
     def test_search(self):
         results = search("North Myrtle Beach, SC")
