@@ -1,4 +1,25 @@
 from ..utils.api import make_request
+import json
+
+def us_states():
+    """
+    Returns a dictionary containing the US state IDs and their corresponding names.
+
+    Returns:
+        dict: A dictionary where the keys are the state IDs and the values are the state names.
+    """
+    with open('sidt/data/tripadvisor/us_state_ids.json') as f:
+        return json.load(f)
+
+def us_cities():
+    """
+    Returns a dictionary containing the US city IDs and their corresponding names.
+
+    Returns:
+        dict: A dictionary where the keys are the city IDs and the values are the city names.
+    """
+    with open('sidt/data/tripadvisor/us_city_ids.json') as f:
+        return json.load(f)
 
 
 def search(query: str, loc_types: list = None):

@@ -7,6 +7,18 @@ from sidt.interfaces.tripadvisor import *
 
 class TestTripadvisor(unittest.TestCase):
 
+    def test_us_states(self):
+        states = us_states()
+        self.assertIsInstance(states, dict)
+        self.assertGreater(len(states), 0)
+        print(states)
+    
+    def test_us_cities(self):
+        cities = us_cities()
+        self.assertIsInstance(cities, dict)
+        self.assertGreater(len(cities), 0)
+        print(cities)
+
     def test_search(self):
         results = search("North Myrtle Beach, SC")
         for result in results:
