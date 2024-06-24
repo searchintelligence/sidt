@@ -26,7 +26,7 @@ class TestTrustpilot(unittest.TestCase):
         self.assertIsInstance(results[0]["trustScore"], float)
 
     def test_get_reviews(self):
-        reviews = get_reviews("yeezy.com")
+        reviews = get_reviews("keystonepuppies.com")
         self.assertIsInstance(reviews, list)
 
         self.assertIsInstance(reviews[0], dict)
@@ -37,6 +37,7 @@ class TestTrustpilot(unittest.TestCase):
         self.assertIsInstance(reviews[0]["title"], str)
         self.assertIsInstance(reviews[0]["body"], str)
         self.assertIsInstance(reviews[0]["rating"], int)
+        print(len(reviews))
 
     def test_get_release_number(self):
         release_number = get_release_number()
