@@ -1,3 +1,4 @@
+import math
 import requests
 import random
 
@@ -13,6 +14,19 @@ def get_profile_id(username: str):
         return int(make_search_query(username)["users"][0]["user"]["pk"])
     except:
         raise Exception("User not found")
+    
+def get_hashtag_popularity(tag: str):
+    
+    url = "https://www.instagram.com/api/v1/tags/web_info/"
+    cookies = {'sessionid': generate_session_id()}
+    headers = {'X-IG-App-ID': '936619743392459'}
+    params = {"tag_name": tag}
+    
+    r = requests.get(url, headers=headers, cookies=cookies, params=params).json()
+    try:
+        return r["count"]
+    except:
+        return None
 
 def make_search_query(query: str):
     url = f"https://www.instagram.com/web/search/topsearch/?query={query}"
@@ -35,13 +49,16 @@ def get_user_info(id: int):
     
     data = r.json()["user"]
 
+    try: public_email = data["public_email"]
+    except: public_email = None
+
     return {
         "id": id,
         "username": data["username"],
         "full_name": data["full_name"],
         "account_type": data["account_type"],
         "biography": data["biography"],
-        "email": data["public_email"],
+        "email": public_email,
         "followers": data["follower_count"],
         "following": data["following_count"],
         "posts": data["media_count"],
@@ -82,15 +99,38 @@ def generate_user_analysis(username: str):
     following = info["following"]
     average_likes = sum([post["likes"] for post in posts]) / len(posts)
     average_comments = sum([post["comments"] for post in posts]) / len(posts)
+    engagement_rate = (average_likes + average_comments) / followers * 100
+
+    def get_base_cost(followers: int):
+        if followers < 1000:
+            return 10
+        elif followers < 10000:
+            return 25
+        elif followers < 50000:
+            return 20
+        elif followers < 300000:
+            return 15
+        elif followers < 1000000:
+            return 10
+        else:
+            return 0
+
+    cost = get_base_cost(followers) + (followers / 100) * (1 + engagement_rate / 100)
+
     return{
         "followers": followers,
         "following": following,
         "posts": info["posts"],
+        "sample_size": len(posts),
         "average_likes": average_likes,
         "average_comments": average_comments,
-        "estimated_reach": (average_likes + average_comments) / followers * 100,
+        "estimated_reach": None,
         "estimated_story_impressions": None,
         "estimated_post_impressions": None,
-        "engagement_rate": None,
+        "engagement_rate": engagement_rate,
         "engagement_rate_benchmark": None,
+        "price_per_post": {
+            "min": cost - (cost * 0.15),
+            "max": cost + (cost * 0.15)
+        }
     }

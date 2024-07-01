@@ -16,6 +16,12 @@ class TestInstagram(unittest.TestCase):
         self.assertIsInstance(s, str)
         self.assertGreater(len(s), 0)
         print(s)
+    
+    def test_get_hashtag_populatiry(self):
+        pop = get_hashtag_popularity("fyp")
+        self.assertIsInstance(pop, int)
+        self.assertGreater(pop, 0)
+        print(pop)
 
     def test_make_search_query(self):
         q = make_search_query("nasa")
