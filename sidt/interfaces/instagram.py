@@ -1,96 +1,133 @@
 import requests
-import random
 
-def generate_session_id():
-    tokens = [
-        "64879496178%3ANPvOaY1pDUpnkd%3A23%3AAYdsR_yQQnG_Ngx8SEcYEkGhndGpXEcR9zlevpVtTw",
-        "64879496178%3ANPvOaY1pDUpnkd%3A23%3AAYdPuPyB-PgKRzLznreqM60W0iY_z2p7Om-DCDY4nVQ"
-    ]
-    return random.choice(tokens)
+class Instagram:
 
-def get_profile_id(username: str):
-    try:
-        return int(make_search_query(username)["users"][0]["user"]["pk"])
-    except:
-        raise Exception("User not found")
+    # Api has a rate limit of 200 requests per hour
 
-def make_search_query(query: str):
-    url = f"https://www.instagram.com/web/search/topsearch/?query={query}"
-    headers = {'X-IG-App-ID': '936619743392459'}
-    cookies = {'sessionid': generate_session_id()}
-    r = requests.get(url, headers=headers, cookies=cookies)
-    return r.json()
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+        self.cookies = {'sessionid': self.session_id}
+        self.headers = {'X-IG-App-ID': '936619743392459'}
 
-def get_user_info(id: int):
-    url = f'https://i.instagram.com/api/v1/users/{id}/info'
-    headers = {'X-IG-App-ID': '936619743392459'}
-    cookies = {'sessionid': generate_session_id()}
 
-    r = requests.get(url, cookies=cookies, headers=headers)
+    def get_profile_id(self, username: str):
+        try:
+            return int(self.make_search_query(username)["users"][0]["user"]["pk"])
+        except:
+            return 0
+        
+    def get_hashtag_popularity(self, tag: str):
+        url = "https://www.instagram.com/api/v1/tags/web_info/"
+        params = {"tag_name": tag}
+        
+        r = requests.get(url, headers=self.headers, cookies=self.cookies, params=params)
+        if r.status_code == 404:
+            return 0
+        try:
+            return r.json()["count"]
+        except:
+            raise Exception(f"Error finding data for #{tag}")
 
-    if r.status_code == 404:
-        raise Exception("User not found")
-    if r.json()["status"] != "ok":
-        raise Exception(f"API returned with status \"{r.json()['status']}\": {r.json()['message']}")
-    
-    data = r.json()["user"]
+    def make_search_query(self, query: str):
+        url = f"https://www.instagram.com/web/search/topsearch/?query={query}"
 
-    return {
-        "id": id,
-        "username": data["username"],
-        "full_name": data["full_name"],
-        "account_type": data["account_type"],
-        "biography": data["biography"],
-        "email": data["public_email"],
-        "followers": data["follower_count"],
-        "following": data["following_count"],
-        "posts": data["media_count"],
-    }
+        r = requests.get(url, headers=self.headers, cookies=self.cookies)
+        return r.json()
 
-def get_user_feed(id: int, collect_all: bool = True):
-    url = f'https://i.instagram.com/api/v1/feed/user/{id}/'
-    headers = {'X-IG-App-ID': '936619743392459'}
+    def get_user_info(self, id: int):
+        url = f'https://i.instagram.com/api/v1/users/{id}/info'
 
-    posts = []
-    max_id = None
-    while True:
-        r = requests.get(url, cookies={'sessionid': generate_session_id()}, headers=headers, params = {"max_id": max_id, "count": 33})
-        for item in r.json()["items"]:
-            try: caption = item["caption"]["text"]
-            except: caption = ""
-            posts.append({
-                "id": item["pk"],
-                "type": item["media_type"],
-                "caption": caption,
-                "timestamp": item["taken_at"],
-                "likes": item["like_count"],
-                "comments": item["comment_count"],
-            })
-        if r.json()["more_available"] and collect_all:
-            max_id = r.json()["next_max_id"]
-        else:
-            break
+        r = requests.get(url, cookies=self.cookies, headers=self.headers)
 
-    return posts
+        if r.status_code == 404:
+            raise Exception("User not found")
+        if r.json()["status"] != "ok":
+            raise Exception(f"API returned with status \"{r.json()['status']}\": {r.json()['message']}")
+        
+        data = r.json()["user"]
 
-def generate_user_analysis(username: str):
-    id = get_profile_id(username)
-    info = get_user_info(id)
-    posts = get_user_feed(id, collect_all=False)
+        try: public_email = data["public_email"]
+        except: public_email = None
 
-    followers = info["followers"]
-    following = info["following"]
-    average_likes = sum([post["likes"] for post in posts]) / len(posts)
-    average_comments = sum([post["comments"] for post in posts]) / len(posts)
-    return{
-        "followers": followers,
-        "following": following,
-        "posts": info["posts"],
-        "average_likes": average_likes,
-        "average_comments": average_comments,
-        "estimated_reach": (average_likes + average_comments) / followers * 100,
-        "estimated_story_impressions": None,
-        "estimated_post_impressions": None,
-        "engagement_rate": None,
-        "engagement_rate_benchmark": None,
-    }
+        return {
+            "id": id,
+            "username": data["username"],
+            "full_name": data["full_name"],
+            "account_type": data["account_type"],
+            "biography": data["biography"],
+            "email": public_email,
+            "followers": data["follower_count"],
+            "following": data["following_count"],
+            "posts": data["media_count"],
+        }
+
+    def get_user_feed(self, id: int, collect_all: bool = True):
+        url = f'https://i.instagram.com/api/v1/feed/user/{id}/'
+        max_id = None
+        params = {"max_id": max_id, "count": 33}
+
+        posts = []
+        while True:
+            r = requests.get(url, cookies=self.cookies, headers=self.headers, params=params)
+            for item in r.json()["items"]:
+                try: caption = item["caption"]["text"]
+                except: caption = ""
+                posts.append({
+                    "id": item["pk"],
+                    "type": item["media_type"],
+                    "caption": caption,
+                    "timestamp": item["taken_at"],
+                    "likes": item["like_count"],
+                    "comments": item["comment_count"],
+                })
+            if r.json()["more_available"] and collect_all:
+                max_id = r.json()["next_max_id"]
+            else:
+                break
+
+        return posts
+
+    def generate_user_analysis(self, username: str):
+        id = self.get_profile_id(username)
+        info = self.get_user_info(id)
+        posts = self.get_user_feed(id, collect_all=False)
+
+        followers = info["followers"]
+        following = info["following"]
+        average_likes = sum([post["likes"] for post in posts]) / len(posts)
+        average_comments = sum([post["comments"] for post in posts]) / len(posts)
+        engagement_rate = (average_likes + average_comments) / followers * 100
+
+        def get_base_cost(followers: int):
+            if followers < 1000:
+                return 10
+            elif followers < 10000:
+                return 25
+            elif followers < 50000:
+                return 20
+            elif followers < 300000:
+                return 15
+            elif followers < 1000000:
+                return 10
+            else:
+                return 0
+
+        cost = get_base_cost(followers) + (followers / 100) * (1 + engagement_rate / 100)
+
+        return{
+            "followers": followers,
+            "following": following,
+            "posts": info["posts"],
+            "sample_size": len(posts),
+            "average_likes": average_likes,
+            "average_comments": average_comments,
+            "estimated_reach": None,
+            "estimated_story_impressions": None,
+            "estimated_post_impressions": None,
+            "engagement_rate": engagement_rate,
+            "engagement_rate_benchmark": None,
+            "price_per_post": {
+                "min": cost - (cost * 0.15),
+                "max": cost + (cost * 0.15)
+            }
+        }

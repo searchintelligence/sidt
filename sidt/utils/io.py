@@ -73,6 +73,9 @@ class CLIF():
 def dump(data, filename="output"):
     # data must be a dataclass object or list of the same dataclass objects
 
+    if len(data) == 0:
+        return
+
     origin = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
     os.makedirs(os.path.join("out", origin), exist_ok=True)
     path = os.path.join("out", origin, filename + ".csv")
