@@ -323,8 +323,8 @@ class XLWriter():
             if sheet.df.shape[0] > 1048576 or sheet.df.shape[1] > 16384:
                 to_remove.append(i)
                 base_name = os.path.splitext(self.file_path)[0]
-                file_name = f"{base_name}_{sheet['label']}.csv"
-                csv_file_path = os.path.join(self.file_path_dir, file_name)
+                file_name = f"{base_name}_{sheet.table_name}.csv"
+                csv_file_path = os.path.join(self.file_path, file_name)
                 sheet.df.to_csv(csv_file_path, index=False)
 
         # Explicitly finalise sheets if contents are not added
