@@ -237,7 +237,7 @@ class XLWriter():
         if extra_info is None:
             extra_info = {}
         extra_info = extra_info.copy()
-                
+        
         # Clean sheet name and table name
         original_sheet_name = sheet_name
         sheet_name = computerise_string(humanise_string(sheet_name), truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
@@ -317,10 +317,11 @@ class XLWriter():
         if not self.sheets:
             raise ValueError("No sheets have been added to the writer. Please add sheets using the add_sheet() method.")
 
-        # Check for large sheets and write to CSV if necessary
+        # Check for large sheets and write to CSV if necessary (over 200mb, 500k rows, or 15k columns)
         to_remove = []
         for i, sheet in enumerate(self.sheets):
-            if sheet.df.shape[0] > 1048576 or sheet.df.shape[1] > 16384:
+            if sheet.df.shape[0] >= 500000 or sheet.df.shape[1] >= 15000 or sheet.df.memory_usage(deep=True).sum() >= 200 * 1024 * 1024:
+                print("Writing large sheet to CSV:", sheet.sheet_name)
                 to_remove.append(i)
                 base_name = os.path.splitext(self.file_path)[0]
                 file_name = f"{base_name}_{sheet.table_name}.csv"
@@ -337,6 +338,7 @@ class XLWriter():
 
         self._initialise_writer()
         for sheet in self.sheets:
+            print("Writing sheet to XLSX:", sheet.sheet_name)
 
             # Create the worksheet if it doesn't exist
             if sheet.worksheet is None:
