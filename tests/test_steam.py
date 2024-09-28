@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import unittest
 
-from sidt.interfaces.steam import *
+from sidt.interfaces.steam import Steam
 
 
 class TestSteam(unittest.TestCase):

@@ -23,7 +23,7 @@ def generate_bearer_token():
             if "authorization" in request.headers.keys() and "Bearer" in request.headers['authorization']:
                 token = request.headers['authorization']
         if token:
-            return token       
+            return token
     return None
 
 def get_token(auth: Auth):
@@ -50,9 +50,9 @@ def get_album(uri: str):
         })
     return items
 
-def get_track(uri:str, auth: generate_bearer_token):
+def get_track(uri:str):
     headers = {
-        'authorization': auth,
+        'authorization': generate_bearer_token,
     }
     
     url = url = f"https://api-partner.spotify.com/pathfinder/v1/query?operationName=getTrack&variables=%7B%22uri%22%3A%22{uri}%22%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22ae85b52abb74d20a4c331d4143d4772c95f34757bfa8c625474b912b9055b5c0%22%7D%7D"

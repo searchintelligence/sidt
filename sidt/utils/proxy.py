@@ -1,5 +1,5 @@
 import subprocess
-
+import njord
 
 class Nord():
     """
@@ -30,3 +30,14 @@ class Nord():
         
         return result.stdout, result.stderr
 
+class Njord():
+    # NordVPN wrapper that supports MacOS
+
+    def __init__(self):
+        self.client = njord.Client()
+
+    def disconnect(self):
+        self.client.disconnect()
+
+    def connect(self, country=None):
+        self.client.connect()

@@ -53,8 +53,9 @@ class TestTripadvisor(unittest.TestCase):
 
     def test_get_review_details(self):
         details_list = [
-            get_review_details(102432),
-            get_review_details(24166513),
+            # get_review_details(102432),
+            # get_review_details(24166513),
+            get_review_details(105056)
         ]
 
         for details in details_list:
@@ -71,7 +72,7 @@ class TestTripadvisor(unittest.TestCase):
             self.assertIn("average", details["rating_aggregations"])
             self.assertIn("poor", details["rating_aggregations"])
             self.assertIn("terrible", details["rating_aggregations"])
-            print(details)
+            print(json.dumps(details, indent=2, ensure_ascii=False))
 
     def test_get_filtered_review_count(self):
         count_list = [

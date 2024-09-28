@@ -80,10 +80,14 @@ class Instagram:
                     "likes": item["like_count"],
                     "comments": item["comment_count"],
                 })
-            if r.json()["more_available"] and collect_all:
-                max_id = r.json()["next_max_id"]
-            else:
+            try:
+                if r.json()["more_available"] and collect_all:
+                    max_id = r.json()["next_max_id"]
+                else:
+                    break
+            except:
                 break
+            
 
         return posts
 
@@ -94,8 +98,8 @@ class Instagram:
 
         followers = info["followers"]
         following = info["following"]
-        average_likes = sum([post["likes"] for post in posts]) / len(posts)
-        average_comments = sum([post["comments"] for post in posts]) / len(posts)
+        average_likes = sum([post["likes"] for post in posts]) / len(posts) if len(posts) > 0 else 0
+        average_comments = sum([post["comments"] for post in posts]) / len(posts) if len(posts) > 0 else 0
         engagement_rate = (average_likes + average_comments) / followers * 100
 
         def get_base_cost(followers: int):
