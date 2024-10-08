@@ -1,4 +1,5 @@
 import requests
+import tls_client
 from ..utils.api import make_request
 import json
 
@@ -174,6 +175,10 @@ def get_review_details(id: int):
 
 
 def get_filtered_review_count(id: int, filter: str = ""):
+    tls = tls_client.Session(
+            client_identifier="chrome128",
+            random_tls_extension_order=True
+        )
     url = "https://www.tripadvisor.com/data/graphql/ids"
     payload = [
         {
