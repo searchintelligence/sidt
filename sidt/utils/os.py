@@ -97,23 +97,34 @@ def validate_path(path, expected_extension=None, is_file=True, read_access=False
     return True
     
 
-def get_available_funcs(module, exclude_private=True, exclude_module=True):
+def get_available_funcs(target, exclude_private=True, exclude_module=True):
     """
-    Returns a list of available functions in the specified module.
+    Returns a list of available functions or methods in the specified target (class or module).
     
     Args:
-        module (module): The module to inspect.
-        exclude_private (bool, optional): Exclude private functions (starting with '_'). Defaults to True.
-        exclude_module (bool, optional): Exclude functions from imported modules. Defaults to True.
+        target (module or class): The module or class to inspect.
+        exclude_private (bool, optional): Exclude private functions or methods (starting with '_'). Defaults to True.
+        exclude_module (bool, optional): Exclude functions or methods from imported modules. Defaults to True.
         
     Returns:
-        list: List of available function names.
+        list: List of available function or method names.
     """
     
+    # Check if the target is a class
+    if isinstance(target, type):
+        available_methods = [
+            name for name, obj in target.__dict__.items()
+            if callable(obj) 
+            and (not exclude_private or not name.startswith("_"))
+            and (not exclude_module or obj.__module__ == target.__module__)
+        ]
+        return available_methods
+    
+    # Otherwise, assume the target is a module
     available_functions = [
-        name for name, obj in module.__dict__.items() 
+        name for name, obj in target.__dict__.items() 
         if callable(obj) 
         and (not exclude_private or not name.startswith("_"))
-        and (not exclude_module or obj.__module__ == module.__name__)
+        and (not exclude_module or obj.__module__ == target.__name__)
     ]
     return available_functions

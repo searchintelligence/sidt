@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import inspect
 from datetime import datetime
@@ -11,7 +12,7 @@ class Prutils:
     """
 
     from sidt.utils.io import CLIF, read_json, write_json
-    from sidt.utils.os import open_dir
+    from sidt.utils.os import open_dir, get_available_funcs
     from sidt.utils.git import GitController
 
     def __init__(self):
@@ -173,8 +174,7 @@ class Prutils:
         print(Prutils.CLIF.fmt(f"Current project name: '{self.project_name}'", Prutils.CLIF.Color.GREEN))
 
 
-    @staticmethod
-    def help():
+    def help(self):
         """Static method to print the available commands."""
-        available_methods = [func for func in dir(Prutils) if callable(getattr(Prutils, func)) and not func.startswith("_")]
+        available_methods = Prutils.get_available_funcs(self.__class__, exclude_module=True)
         print(Prutils.CLIF.fmt(f"Available commands: {', '.join(available_methods)}", Prutils.CLIF.Color.GREEN))
