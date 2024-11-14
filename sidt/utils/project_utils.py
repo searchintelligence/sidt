@@ -44,8 +44,8 @@ class Prutils:
 
 
     def _get_template_dir(self):
-        """Returns the path to the project template directory in the caller's directory."""
-        return os.path.join(self.caller_dir, "App", "project_template")
+        """Returns the path to the project template directory specified in the config."""
+        return os.path.join(self.caller_dir, self.config.get("template_path", "Application/project_template"))
 
 
     def _get_project_dir(self, folder_name, parent_folder_name=None):
@@ -64,7 +64,19 @@ class Prutils:
                 print(Prutils.CLIF.fmt(f"Directory is not a git repository. Skipping update check.", Prutils.CLIF.Color.YELLOW))
                 return
 
-            git_info = git.check_for_app_updates(root_dir=self.caller_dir)
+            git = git.check_for_app_updates(root_dir=self.caller_dir)
+            if git is None:
+                print(Prutils.CLIF.fmt(f"Failed to check for updates.", Prutils.CLIF.Color.RED))
+                git_info = {
+                    "is_repo": git.is_git_repo
+                }
+            else:
+                git_info = {
+                    "local_commit": git.local_commit,
+                    "remote_commit": git.remote_commit,
+                    "is_outdated": git.is_outdated,
+                    "is_repo": git.is_git_repo,
+                }
 
             # Update config with git version details
             config_path = os.path.join(self.caller_dir, "config.json")
@@ -83,8 +95,9 @@ class Prutils:
 
         # Get important directories
         project_dir = self._get_project_dir(self.project_name)
-        app_dir = os.path.join(self.caller_dir, "App")
+        app_dir = os.path.join(self.caller_dir, "Application")
         data_dir = os.path.join(app_dir, "data")
+        app_config = Prutils.read_json(os.path.join(self.caller_dir, "config.json"))
 
         # Initialize and run the project
         project = project_class(
@@ -92,7 +105,8 @@ class Prutils:
             root_dir=self.caller_dir,
             app_dir=app_dir,
             data_dir=data_dir,
-            project_name=self.project_name
+            project_name=self.project_name,
+            app_config=app_config
         )
         project.initialise()
         project.run()
