@@ -1,5 +1,6 @@
 import csv
 import os
+import json
 import inspect
 
 from enum import Enum
@@ -11,8 +12,6 @@ import numpy as np
 import pandas as pd
 
 from pandas.api.types import is_datetime64_any_dtype
-
-from ..utils.data import humanise_string, computerise_string, excel_column_converter
 
 
 class CLIF():
@@ -117,6 +116,82 @@ def dfs_to_xlsx(dfs, file_path):
             df.to_excel(writer, sheet_name=sheet_name)
 
 
+def read_json(relative_path):
+    """
+    Reads a JSON file from the given relative path and returns its contents as a dictionary.
+    The path should be provided relative to the calling script's directory.
+
+    Args:
+        relative_path (str): Relative path of the JSON file.
+    Returns:
+        any: Contents of the JSON file, typically a dictionary.
+    """
+
+    from sidt.utils.os import validate_path
+
+    # Determine path for json file
+    caller_dir = os.path.dirname(os.path.realpath(inspect.stack()[1].filename))
+    file_path = os.path.join(caller_dir, relative_path)
+
+    # Validate the file path
+    validate_path(file_path, expected_extension=".json", read_access=True)
+
+    # Read and return the contents of the json file
+    with open(file_path, "r") as file:
+        return json.load(file)
+
+
+def write_json(data, relative_path):
+    """
+    Writes a dictionary to a JSON file at the given relative path.
+    The path should be provided relative to the calling script's directory.
+
+    Args:
+        data (dict): The data to write to the JSON file.
+        relative_path (str): Relative path of the JSON file.
+    """
+    
+    from sidt.utils.os import validate_path
+
+    # Determine path for json file
+    caller_dir = os.path.dirname(os.path.realpath(inspect.stack()[1].filename))
+    file_path = os.path.join(caller_dir, relative_path)
+
+    # Validate the file path (for write access)
+    validate_path(file_path, expected_extension=".json", write_access=True)
+
+    # Write the data to the json file
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=4)
+
+
+def read_txt(relative_path, encoding="utf-8") -> str:
+    """
+    Reads a text file from the given relative path and returns its contents as a string.
+    The file is read using the given encoding, which defaults to 'utf-8'.
+    The path should be provided relative to the calling script's directory.
+
+    Args:
+        relative_path (str): Relative path of the text file.
+        encoding (str, optional): Encoding used to read the file. Defaults to 'utf-8'.
+    Returns:
+        str: Contents of the text file.
+    """
+
+    from sidt.utils.os import validate_path
+
+    # Determine path for txt file
+    caller_dir = os.path.dirname(os.path.realpath(inspect.stack()[1].filename))
+    file_path = os.path.join(caller_dir, relative_path)
+
+    # Validate the file path
+    validate_path(file_path, expected_extension=".txt", read_access=True)
+
+    # Read and return the contents of the txt file
+    with open(file_path, "r", encoding=encoding) as file:
+        return file.read()
+    
+
 class XLWriter():
     """
     Class for writing dataframes to Excel with clean formatting, titles, contents, descriptions, and navigation.
@@ -127,6 +202,8 @@ class XLWriter():
         add_contents(): Adds a contents sheet listing all other sheets. (optional)
         write(): Writes all added sheets to the Excel file and saves it.
     """
+
+    from sidt.utils.data import humanise_string, computerise_string, excel_column_converter
 
     def __init__(self, file_path=None):
         """
@@ -240,13 +317,13 @@ class XLWriter():
         
         # Clean sheet name and table name
         original_sheet_name = sheet_name
-        sheet_name = computerise_string(humanise_string(sheet_name), truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
-        table_name = computerise_string(original_sheet_name, replace_hyphens="_", strip_all_whitespace=True, alphanumeric_only=True,
+        sheet_name = XLWriter.computerise_string(XLWriter.humanise_string(sheet_name), truncate_length=31, remove_problematic_chars=True, strip_all_whitespace=True)
+        table_name = XLWriter.computerise_string(original_sheet_name, replace_hyphens="_", strip_all_whitespace=True, alphanumeric_only=True,
                                         no_leading_digit=True, replace_spaces="_", to_case="lower", allow_underscores=True)
         
         # Convert column headers to human readable format if required
         if humanise_headers:
-            df.columns = [humanise_string(col) for col in df.columns]
+            df.columns = [XLWriter.humanise_string(col) for col in df.columns]
 
         # Determine column widths
         no_cols = len(df.columns)
@@ -360,7 +437,7 @@ class XLWriter():
         i = 0
         for sheet in self.sheets:
             if sheet.enum_sheet_name:
-                sheet.sheet_name = computerise_string(f"{i + 1}. {sheet.sheet_name}", truncate_length=31)
+                sheet.sheet_name = XLWriter.computerise_string(f"{i + 1}. {sheet.sheet_name}", truncate_length=31)
                 i += 1
 
 
@@ -462,7 +539,7 @@ class XLWriter():
         end_col_index = len(main_df.columns)
         if sheet.show_index:
             end_col_index += 1
-        end_col_name = excel_column_converter(end_col_index)
+        end_col_name = XLWriter.excel_column_converter(end_col_index)
         end_row_index = 2 + len(sheet.extra_info.keys())
                 
         # Write, merge, and format title and description
@@ -472,7 +549,7 @@ class XLWriter():
 
             # Write extra information
             for i, (key, value) in enumerate(sheet.extra_info.items()):
-                text = f"{humanise_string(key)} - {value}"
+                text = f"{XLWriter.humanise_string(key)} - {value}"
                 worksheet.merge_range(f"A{3+i}:{end_col_name}{3+i}", text, self.formats["description"])
         else:
             worksheet.write("A1", sheet.title, self.formats["title"])
@@ -480,7 +557,7 @@ class XLWriter():
 
             # Write extra information
             for i, (key, value) in enumerate(sheet.extra_info.items()):
-                text = f"{humanise_string(key)} - {value}"
+                text = f"{XLWriter.humanise_string(key)} - {value}"
                 worksheet.write(f"A{3+i}", text, self.formats["description"])
             
         # Add hyperlink to return to the contents sheet
@@ -517,7 +594,7 @@ class XLWriter():
 
         # Reformat column headers if configured to do so.
         if sheet.humanise_headers:
-            df.columns = [humanise_string(col) for col in df.columns]
+            df.columns = [XLWriter.humanise_string(col) for col in df.columns]
 
         # Set the table formatting config and set the range as a table
         table_config = {
