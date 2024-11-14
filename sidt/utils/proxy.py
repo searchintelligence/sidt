@@ -29,4 +29,3 @@ class Nord():
             result = subprocess.run(["nordvpn", "-c"], capture_output=True, text=True)
         
         return result.stdout, result.stderr
-

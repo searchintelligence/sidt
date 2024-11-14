@@ -4,9 +4,6 @@ import json
 import pandas as pd
 import geopandas as gpd
 
-from ..utils.os import get_current_path
-
-
 class Geocoder():
     """
     A class for geocoding geographic coordinates, using either built-in geographic data
@@ -28,6 +25,8 @@ class Geocoder():
     Example:
         geocoded_df = Geocoder.find_containing_regions(df, "uk_local_authorities")
     """
+
+    from sidt.utils.os import get_current_path
 
     valid_packages = ["countries", "european_countries", "us_states", "us_counties", "uk_local_authorities", "us_primary_roads"]
 
@@ -66,7 +65,7 @@ class Geocoder():
 
         # If no custom GeoDataFrame is provided, load the GeoDataFrame from the package_gdf
         if not hasattr(self, "gdf") or self.gdf is None:
-            root_path = os.path.dirname(get_current_path())
+            root_path = os.path.dirname(Geocoder.get_current_path())
             lookup_path = os.path.join(root_path, "data", "geojson", ".lookups.json")
 
             # Load the GeoDataFrame from the package_gdf

@@ -2,7 +2,6 @@ import sys
 import time
 import subprocess
 
-from sidt.utils.io import CLIF
 
 class GitController():
     """
@@ -222,6 +221,8 @@ class GitController():
         return:
             GitController: The GitController object for the project. Contains commit information and update status.
         """
+
+        from sidt.utils.io import CLIF
 
         print(CLIF.fmt(f"\n\nChecking Github for updates to the app...", CLIF.Format.BOLD, CLIF.Color.GREEN))
         git = GitController(root_dir)

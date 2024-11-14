@@ -4,8 +4,6 @@ from functools import wraps
 
 from tqdm import tqdm
 
-from ..utils.io import CLIF
-
 
 def retry(n_attempts=3, wait=0, exponential_backoff=False, randomise_wait=True, catch_types=Exception, show_tracker=True, require_input=False):
     """
@@ -25,6 +23,8 @@ def retry(n_attempts=3, wait=0, exponential_backoff=False, randomise_wait=True, 
     def risky_function():
         "Code that might fail"
     """
+
+    from sidt.utils.io import CLIF
 
     def calculate_wait_time(attempt, base_wait, use_exponential_backoff, use_random):
         """Calculate the wait time based on the current attempt number."""
