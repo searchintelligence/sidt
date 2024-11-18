@@ -53,7 +53,7 @@ def get_root_path(current_directory=".", max_depth=3, look_for=[".git", "require
         current_directory = os.path.dirname(current_directory)
 
 
-def validate_path(path, expected_extension=None, is_file=True, read_access=False, write_access=False, allow_empty=False) -> bool:
+def validate_path(path, expected_extension=None, is_file=True, read_access=False, write_access=False, allow_empty=False, allow_not_exists=False) -> bool:
     """
     Validates the given path based on the specified criteria.
     Raises exceptions if the path is invalid.
@@ -65,12 +65,25 @@ def validate_path(path, expected_extension=None, is_file=True, read_access=False
         read_access (bool, optional): Check read access. Defaults to False.
         write_access (bool, optional): Check write access. Defaults to False.
         allow_empty (bool, optional): Allow empty files or folders. Defaults to False.
+        allow_not_exists (bool, optional): Allow path to not exist. Defaults to False.
         
     Returns:
         bool: True if the path is valid.
     """
     if not isinstance(path, str):
         raise TypeError(f"Path must be a string: {path}")
+
+    # Check if the path exists
+    if allow_not_exists and not os.path.exists(path):
+        # Ensure parent directory exists if writing to a file
+        if is_file:
+            directory = os.path.dirname(path)
+            if not os.path.isdir(directory):
+                raise FileNotFoundError(f"Directory does not exist: {directory}")
+            if write_access and not os.access(directory, os.W_OK):
+                raise PermissionError(f"Write permission denied for directory: {directory}")
+        return True
+
     if not os.path.exists(path):
         raise FileNotFoundError(f"Path not found: {path}")
 

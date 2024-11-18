@@ -4,6 +4,160 @@ import json
 import pandas as pd
 import geopandas as gpd
 
+
+class GeoPackages():
+    """
+    A class for browsing, managing, and accessing GeoJSON files within the geojson directory.
+
+    Attributes:
+        root_path (str): The root directory of the GeoJSON data files.
+        lookup_path (str): The path to the lookup file containing metadata about available GeoJSON files.
+        available_packages (list): A list of all available packages based on the lookup file.
+    """
+
+    from sidt.utils.os import get_current_path
+
+    def __init__(self):
+        """
+        Initializes the GeoJSON class by setting up paths and loading metadata from the lookup file.
+        """
+
+        self.root_path = os.path.dirname(GeoPackages.get_current_path())
+        self.geojson_dir = os.path.join(self.root_path, "data", "geojson")
+        self.lookup_path = os.path.join(self.geojson_dir, ".lookups.json")
+
+        if not os.path.exists(self.lookup_path):
+            raise FileNotFoundError(f"Lookup file not found: {self.lookup_path}")
+
+        with open(self.lookup_path, "r") as file:
+            self.lookups = json.load(file)
+
+        self.available_packages = list(self.lookups.keys())
+
+
+    def list_packages(self):
+        """
+        Lists all available GeoJSON packages.
+
+        Returns:
+            list: A list of available GeoJSON package names.
+        """
+        return self.available_packages
+
+
+    def get_geojson_file_path(self, package_name):
+        """
+        Retrieves the file path of the GeoJSON file for a given package.
+
+        Args:
+            package_name (str): The name of the package.
+
+        Returns:
+            str: The file path of the GeoJSON file.
+
+        Raises:
+            ValueError: If the package_name is not valid.
+        """
+        if package_name not in self.lookups:
+            raise ValueError(f"Invalid package name: {package_name}. Available packages: {self.available_packages}")
+
+        return os.path.join(self.geojson_dir, self.lookups[package_name]["geo_file"])
+
+
+    def load_gdf(self, package_name):
+        """
+        Loads a GeoDataFrame from the specified package.
+
+        Args:
+            package_name (str): The name of the package.
+
+        Returns:
+            gpd.GeoDataFrame: The loaded GeoDataFrame.
+        """
+        file_path = self.get_geojson_file_path(package_name)
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"GeoJSON file not found: {file_path}")
+
+        return gpd.read_file(file_path)
+
+
+    def get_columns(self, package_name):
+        """
+        Retrieves the column names of the GeoDataFrame for a specified GeoJSON package.
+
+        Args:
+            package_name (str): The name of the package.
+
+        Returns:
+            list: A list of column names in the GeoDataFrame.
+        """
+        gdf = self.load_gdf(package_name)
+        return gdf.columns.tolist()
+
+
+    def get_geometry(self, package_name, key=None, key_column="name", as_list=False):
+        """
+        Retrieves the geometries from a GeoJSON package.
+
+        Args:
+            package_name (str): The name of the package.
+            key (str, optional): The value to match in the specified key_column. Defaults to None.
+            key_column (str, optional): The column to match the key against. Defaults to "name".
+            as_list (bool, optional): If True, returns a list of geometry objects. Defaults to False.
+
+        Returns:
+            shapely.geometry or list: The geometry object(s) from the package or a specific geometry matching the key.
+        """
+        gdf = self.load_gdf(package_name)
+        
+        # If a specific key is provided, filter the GeoDataFrame
+        if key:
+            if key_column not in gdf.columns:
+                raise ValueError(f"Column '{key_column}' not found in GeoDataFrame.")
+            
+            # Filter the GeoDataFrame for the specific key
+            filtered_gdf = gdf[gdf[key_column] == key]
+            if filtered_gdf.empty:
+                raise ValueError(f"No geometry found for key '{key}' in column '{key_column}'.")
+
+            if as_list:
+                return filtered_gdf["geometry"].tolist()
+            return filtered_gdf["geometry"].iloc[0]  # Return the first match
+
+        # Return all geometries if no key is specified
+        if as_list:
+            return gdf["geometry"].tolist()
+        return gdf["geometry"]
+
+
+    def get_bounds(self, package_name):
+        """
+        Retrieves the bounding box of the geometries in a GeoJSON package.
+
+        Args:
+            package_name (str): The name of the package.
+
+        Returns:
+            tuple: A tuple representing the bounding box (minx, miny, maxx, maxy).
+        """
+        gdf = self.load_gdf(package_name)
+        return gdf.total_bounds
+
+
+    def get_crs(self, package_name):
+        """
+        Retrieves the coordinate reference system (CRS) of a GeoJSON package.
+
+        Args:
+            package_name (str): The name of the package.
+
+        Returns:
+            dict or str: The CRS of the package.
+        """
+        gdf = self.load_gdf(package_name)
+        return gdf.crs
+
+
 class Geocoder():
     """
     A class for geocoding geographic coordinates, using either built-in geographic data
@@ -28,7 +182,8 @@ class Geocoder():
 
     from sidt.utils.os import get_current_path
 
-    valid_packages = ["countries", "european_countries", "us_states", "us_counties", "uk_local_authorities", "us_primary_roads"]
+    packages = GeoPackages()
+    valid_packages = packages.list_packages()
 
 
     def __init__(self, **kwargs):
