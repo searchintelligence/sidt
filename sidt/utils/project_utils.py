@@ -175,6 +175,6 @@ class Prutils:
 
 
     def help(self):
-        """Static method to print the available commands."""
+        """Public method to print the available commands."""
         available_methods = Prutils.get_available_funcs(self.__class__, exclude_module=True)
         print(Prutils.CLIF.fmt(f"Available commands: {', '.join(available_methods)}", Prutils.CLIF.Color.GREEN))
