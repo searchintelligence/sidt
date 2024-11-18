@@ -1,5 +1,6 @@
 import os
 import sys
+import stat
 import shutil
 import inspect
 from datetime import datetime
@@ -84,6 +85,79 @@ class Prutils:
             self.config["git_version"] = git_info
             Prutils.write_json(self.config, config_path)
 
+    
+    def _sync_project_template(self, src_dir, dest_dir):
+        """
+        Sync the contents of src_dir into dest_dir.
+        Removes files/folders not in src_dir and confirms overwrites for existing items.
+
+        Args:
+            src_dir (str): Path to the template directory.
+            dest_dir (str): Path to the project directory.
+        """
+
+        def _on_rm_error(func, path, exc_info):
+            """
+            Handle errors during file or directory removal.
+            Changes permissions and retries the operation.
+            """
+            os.chmod(path, stat.S_IWRITE)  # Grant write permissions
+            func(path)  # Retry the removal
+
+        # Remove items in dest_dir that are not in src_dir
+        for item in os.listdir(dest_dir):
+            if item not in os.listdir(src_dir):
+                item_path = os.path.join(dest_dir, item)
+                user_input = input(Prutils.CLIF.fmt(
+                    f"'{item}' in the project directory does not exist in the template. Remove? (y/n): ",
+                    Prutils.CLIF.Color.YELLOW
+                )).lower()
+                if user_input == "y":
+                    if os.path.isdir(item_path):
+                        shutil.rmtree(item_path, onerror=_on_rm_error)
+                    else:
+                        os.remove(item_path)
+                    print(Prutils.CLIF.fmt(
+                        f"Removed '{item}' from project directory.",
+                        Prutils.CLIF.Color.GREEN
+                    ))
+                else:
+                    print(Prutils.CLIF.fmt(
+                        f"Skipping removal of '{item}'.",
+                        Prutils.CLIF.Color.YELLOW
+                    ))
+
+        # Copy contents from src_dir to dest_dir
+        for item in os.listdir(src_dir):
+            src_path = os.path.join(src_dir, item)
+            dest_path = os.path.join(dest_dir, item)
+
+            if os.path.exists(dest_path):
+                user_input = input(Prutils.CLIF.fmt(
+                    f"'{item}' already exists. Overwrite? (y/n): ",
+                    Prutils.CLIF.Color.YELLOW
+                )).lower()
+                if user_input != "y":
+                    print(Prutils.CLIF.fmt(
+                        f"Skipping '{item}'.",
+                        Prutils.CLIF.Color.YELLOW
+                    ))
+                    continue
+                if os.path.isdir(dest_path):
+                    shutil.rmtree(dest_path)
+                else:
+                    os.remove(dest_path)
+
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, dest_path)
+            else:
+                shutil.copy(src_path, dest_path)
+
+            print(Prutils.CLIF.fmt(
+                f"Copied '{item}' into project directory.",
+                Prutils.CLIF.Color.GREEN
+            ))
+
 
     def run(self, project_class, name=None, open=False):
         """
@@ -125,8 +199,8 @@ class Prutils:
     def create(self, name=None, open=True):
         """
         Public method to create a project with template files.
-        Copies files from the project template directory to the project directory.
-        
+        Ensures the project directory matches the contents of the template directory.
+
         Args:
             name (str, optional): Name of the project directory. Defaults to None, which uses self.project_name.
             open (bool, optional): Whether to open the project directory after creation. Defaults to True.
@@ -139,33 +213,30 @@ class Prutils:
         if name is not None:
             self._set_project_name(name)
         project_dir = self._get_project_dir(self.project_name)
-        
         os.makedirs(project_dir, exist_ok=True)
-        print(Prutils.CLIF.fmt(f"Created project directory.", Prutils.CLIF.Color.GREEN))
+        print(Prutils.CLIF.fmt(
+            f"Ensured project directory exists.",
+            Prutils.CLIF.Color.GREEN
+        ))
 
-        # Get the template files and copy them to the project directory
+        # Get the template directory
         template_dir = self._get_template_dir()
-        if os.path.exists(template_dir) and os.listdir(template_dir):
-            print(Prutils.CLIF.fmt(f"Template directory found. Copying files.", Prutils.CLIF.Color.GREEN))
-            for file in os.listdir(template_dir):
-                file_path = os.path.join(template_dir, file)
-                target_path = os.path.join(project_dir, file)
-                if os.path.isfile(file_path):
-                    # Check if file already exists and prompt for overwrite if it does
-                    if os.path.exists(target_path):
-                        user_input = input(Prutils.CLIF.fmt(f"File '{file}' already exists. Overwrite? (y/n): ", Prutils.CLIF.Color.YELLOW)).lower()
-                        if user_input != "y":
-                            print(Prutils.CLIF.fmt(f"Skipping '{file}'...", Prutils.CLIF.Color.GREEN))
-                            continue
-                    # Copy the file if it doesn’t exist or user confirmed overwrite
-                    shutil.copy(file_path, target_path)
-                    print(Prutils.CLIF.fmt(f"Copied '{file}' to project directory.", Prutils.CLIF.Color.GREEN))
-        else:
-            print(Prutils.CLIF.fmt("No template files found. Project created with an empty directory.", Prutils.CLIF.Color.YELLOW))
-        
+        if not os.path.exists(template_dir) or not os.listdir(template_dir):
+            print(Prutils.CLIF.fmt(
+                "No template files found. Project created as an empty directory.",
+                Prutils.CLIF.Color.YELLOW
+            ))
+            return
+
+        # Sync template contents into the project directory
+        self._sync_project_template(template_dir, project_dir)
+
         # Open the project directory if specified
         if open:
-            print(Prutils.CLIF.fmt(f"Opening project directory '{project_dir}'.", Prutils.CLIF.Color.GREEN))
+            print(Prutils.CLIF.fmt(
+                f"Opening project directory: {project_dir}",
+                Prutils.CLIF.Color.GREEN
+            ))
             Prutils.open_dir(project_dir)
 
 

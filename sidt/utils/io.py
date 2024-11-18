@@ -158,7 +158,7 @@ def write_json(data, relative_path):
     file_path = os.path.join(caller_dir, relative_path)
 
     # Validate the file path (for write access)
-    validate_path(file_path, expected_extension=".json", write_access=True)
+    validate_path(file_path, expected_extension=".json", write_access=True, allow_not_exists=True)
 
     # Write the data to the json file
     with open(file_path, "w", encoding="utf-8") as file:
