@@ -85,7 +85,7 @@ class Prutils:
             Prutils.write_json(self.config, config_path)
 
 
-    def run(self, project_class, open=False):
+    def run(self, project_class, name=None, open=False):
         """
         Public method to run a project.
         Initializes the project, runs it, and opens the project directory if specified.
@@ -93,6 +93,11 @@ class Prutils:
 
         # Check for updates before running
         self._check_for_updates()
+
+        # Use provided name or fall back to the instance's project name
+        if name is not None:
+            self._set_project_name(name)
+        project_dir = self._get_project_dir(self.project_name)
 
         # Get important directories
         project_dir = self._get_project_dir(self.project_name)
