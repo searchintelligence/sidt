@@ -50,10 +50,17 @@ class Prutils:
         return os.path.join(self.caller_dir, self.config.get("template_path", "Application/project_template"))
 
 
-    def _get_project_dir(self, folder_name, parent_folder_name=None):
+    def _get_project_dir(self, folder_name):
         """Returns the path to the project directory in the caller's directory."""
-        if parent_folder_name is None:
+        normalised_path = os.path.normpath(folder_name)
+        parts = normalised_path.split(os.sep)
+        
+        if len(parts) > 1:
+            parent_folder_name = os.path.join(*parts[:-1])
+            folder_name = parts[-1]
+        else:
             parent_folder_name = datetime.now().strftime("%Y-%m")
+
         return os.path.join(self.caller_dir, "Projects", parent_folder_name, folder_name)
 
 
@@ -211,7 +218,8 @@ class Prutils:
 
         # Use provided name or fall back to the instance's project name
         if name is not None:
-            self._set_project_name(name)
+            self._set_project_name(name)        
+
         project_dir = self._get_project_dir(self.project_name)
         os.makedirs(project_dir, exist_ok=True)
         print(Prutils.CLIF.fmt(
