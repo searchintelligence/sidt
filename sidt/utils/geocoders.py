@@ -313,7 +313,6 @@ class Geocoder():
             raise ValueError("GeoDataFrame must contain polygons or multipolygons for region containment geocoding.")
 
         results = geocoder._find_containing_regions()
-        print(results)
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
@@ -489,10 +488,6 @@ class Geocoder():
         utm_crs = self.df.estimate_utm_crs()
         self.df = self.df.to_crs(utm_crs)
         self.gdf = self.gdf.to_crs(utm_crs)
-        print(self.gdf)
-        print(self.df)
-        print(self.gdf.crs)
-        print(self.df.crs)
 
         # Check which points are within the regions
         within_df = self._find_containing_regions()
