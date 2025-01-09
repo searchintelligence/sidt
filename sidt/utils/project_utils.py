@@ -38,11 +38,19 @@ class Prutils:
     def _set_project_name(self, new_name, file_name="config.json"):
         """Sets the project name in 'config.json' in the caller's directory."""
 
+        parts = os.path.normpath(new_name).split(os.sep)
+        if len(parts) > 1:
+            new_name = parts[-1]
+            folder_name = os.path.join(*parts[:-1])
+        else:
+            folder_name = datetime.now().strftime("%Y-%m")
+        combined_name = os.path.join(folder_name, new_name)
+
         file_path = os.path.join(self.caller_dir, file_name)
-        self.config.update({"current_project_name": new_name})
+        self.config.update({"current_project_name": combined_name})
         Prutils.write_json(self.config, file_path)
-        self.project_name = new_name
-        print(Prutils.CLIF.fmt(f"Project name set to '{new_name}'", Prutils.CLIF.Color.GREEN))
+        self.project_name = combined_name
+        print(Prutils.CLIF.fmt(f"Project name set to '{combined_name}'", Prutils.CLIF.Color.GREEN))
 
 
     def _get_template_dir(self):

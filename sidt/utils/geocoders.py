@@ -263,6 +263,9 @@ class Geocoder():
         if self.df.crs != self.gdf.crs:
             self.gdf = self.gdf.to_crs(self.df.crs)
 
+        # Prefix all gdf columns with 'gdf_' to avoid conflicts with df columns, except for the geometry column
+        self.gdf.columns = [f"gc_gdf_{col}" if col != "geometry" else col for col in self.gdf.columns]
+
 
     @staticmethod
     def find_nearest_regions(df, package_gdf="countries", gdf=None, return_gdf=False):
@@ -310,7 +313,6 @@ class Geocoder():
             raise ValueError("GeoDataFrame must contain polygons or multipolygons for region containment geocoding.")
 
         results = geocoder._find_containing_regions()
-        print(results)
 
         # Drop the geometry column
         results.drop(columns=["geometry"], inplace=True)
@@ -426,9 +428,9 @@ class Geocoder():
 
         # First, check which points are within regions
         within_df = self._find_containing_regions()
-        contained_df = within_df[within_df["geocoded"] == "within_region"].copy()
-        not_contained_df = within_df[within_df["geocoded"] == "outside_boundary"].copy()
-        contained_df["distance"] = 0  # Points inside regions have zero distance
+        contained_df = within_df[within_df["gc_is_geocoded"] == "within_region"].copy()
+        not_contained_df = within_df[within_df["gc_is_geocoded"] == "outside_boundary"].copy()
+        contained_df["gc_distance"] = 0  # Points inside regions have zero distance
 
         # Drop new columns from not_contained_df
         new_columns = [col for col in not_contained_df.columns if col not in self.df.columns]
@@ -438,8 +440,8 @@ class Geocoder():
         if not not_contained_df.empty:
 
             # Calculate distances to the nearest region boundary for points not contained within any region
-            nearest_df = gpd.sjoin_nearest(not_contained_df, self.gdf, how="left", distance_col="distance")
-            nearest_df["geocoded"] = "nearest_region"
+            nearest_df = gpd.sjoin_nearest(not_contained_df, self.gdf, how="left", distance_col="gc_distance")
+            nearest_df["gc_is_geocoded"] = "nearest_region"
 
             # Clean up columns from the join
             if "index_right" in nearest_df.columns:
@@ -450,7 +452,7 @@ class Geocoder():
         
         # Handle case where all points are contained within regions
         else:
-            within_df["distance"] = 0
+            within_df["gc_distance"] = 0
             result_df = within_df
 
         # Convert back to original CRS
@@ -466,7 +468,7 @@ class Geocoder():
 
         # Perform spatial join to find points within regions
         result_df = gpd.sjoin(self.df, self.gdf, how="left", predicate="within")
-        result_df["geocoded"] = result_df["index_right"].notnull().replace({True: "within_region", False: "outside_boundary"})
+        result_df["gc_is_geocoded"] = result_df["index_right"].notnull().replace({True: "within_region", False: "outside_boundary"})
         result_df.drop(columns=["index_right"], inplace=True)
 
         # Drop the id_right column from the GeoDataFrame
@@ -489,9 +491,9 @@ class Geocoder():
 
         # Check which points are within the regions
         within_df = self._find_containing_regions()
-        contained_df = within_df[within_df["geocoded"] == "within_region"].copy()
-        not_contained_df = within_df[within_df["geocoded"] == "outside_boundary"].copy()
-        contained_df["distance"] = 0  # Points inside regions have zero distance
+        contained_df = within_df[within_df["gc_is_geocoded"] == "within_region"].copy()
+        not_contained_df = within_df[within_df["gc_is_geocoded"] == "outside_boundary"].copy()
+        contained_df["gc_distance"] = 0  # Points inside regions have zero distance
 
         # Drop new columns from not_contained_df
         new_columns = [col for col in not_contained_df.columns if col not in self.df.columns]
@@ -501,8 +503,8 @@ class Geocoder():
         if not not_contained_df.empty:
 
             # Calculate distances to the nearest region boundary
-            nearest_df = gpd.sjoin_nearest(not_contained_df, self.gdf, how="left", distance_col="distance")
-            nearest_df["geocoded"] = nearest_df["distance"].apply(lambda x: "within_distance" if x <= self.distance else "outside_boundary")
+            nearest_df = gpd.sjoin_nearest(not_contained_df, self.gdf, how="left", distance_col="gc_distance")
+            nearest_df["gc_is_geocoded"] = nearest_df["gc_distance"].apply(lambda x: "within_distance" if x <= self.distance else "outside_boundary")
             
             # Clean up columns from the join]
             if "index_right" in nearest_df.columns:
@@ -513,7 +515,7 @@ class Geocoder():
         
         # Handle case where all points are contained within regions
         else:
-            within_df["distance"] = 0
+            within_df["gc_distance"] = 0
             result_df = within_df
 
         # Convert back to original CRS
