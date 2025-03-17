@@ -22,5 +22,21 @@
     "us_primary_roads": {
         "name": "us_primary_roads",
         "geo_file": "us_primary_roads.geojson"
+    },
+    "uk_cities": {
+        "name": "uk_cities",
+        "geo_file": "uk_cities.geojson"
+    },
+    "canada_provinces": {
+        "name": "canada_provinces",
+        "geo_file": "canada_provinces.geojson"
+    },
+    "canada_cities": {
+        "name": "canada_cities",
+        "geo_file": "canada_cities.geojson"
+    },
+    "us_cities": {
+        "name": "us_cities",
+        "geo_file": "us_cities.geojson"
     }
 }

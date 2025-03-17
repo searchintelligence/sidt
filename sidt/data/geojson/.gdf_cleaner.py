@@ -82,24 +82,20 @@ def convert_to_wgs84(gdf):
 
 
 if __name__ == "__main__":
-    # gdf = load_shp("us_primary_roads")
-    # inspect_gdf(gdf)
-    # gdf = gdf.drop(columns=["MTFCC"])
-    # gdf = gdf.rename(columns={
-    #     "LINEARID": "tiger_line_road_segment_linear_id",
-    #     "FULLNAME": "road_name",
-    #     "RTTYP": "road_type",
-    # })
-    # inspect_gdf(gdf)
 
+    gdf = load_geojson("canada_provinces.geojson")
+    inspect_gdf(gdf)
+    
+    # remove columns except geometry, prov_name_en, prov_code
+    gdf = gdf.drop(columns=[col for col in gdf.columns if col not in ["geometry", "prov_name_en", "prov_code"]])
 
-    # save_geojson(gdf, "us_primary_roads.geojson")
+    # convert prov_code and prov_name_en to strings by extracting the first element in the list values in the columns
+    gdf["prov_code"] = gdf["prov_code"].apply(lambda x: x[0] if isinstance(x, list) else x)
+    gdf["prov_name_en"] = gdf["prov_name_en"].apply(lambda x: x[0] if isinstance(x, list) else x)
 
-    # gdf = load_geojson("us_primary_roads.geojson")
-    # inspect_gdf(gdf)
+    # rename columns to prov_code and prov_name_en
+    gdf = gdf.rename(columns={"prov_code": "code", "prov_name_en": "name"})
 
-    for file in os.listdir(get_current_path()):
-        if file.endswith(".geojson"):
-            gdf = load_geojson(file)
-            inspect_gdf(gdf)
-            input("Press Enter to continue...")
+    # save the cleaned GeoDataFrame
+    inspect_gdf(gdf)
+    save_geojson(gdf, "canada_provinces.geojson")
