@@ -3,9 +3,13 @@
         "name": "countries",
         "geo_file": "un_member_states.geojson"
     },
-    "uk_local_authorities": {
-        "name": "uk_local_authorities",
-        "geo_file": "uk_local_authorities.geojson"
+    "uk_local_authorities_24": {
+        "name": "uk_local_authorities_24",
+        "geo_file": "uk_local_authorities_24.geojson"
+    },
+    "uk_local_authorities_21": {
+        "name": "uk_local_authorities_21",
+        "geo_file": "uk_local_authorities_21.geojson"
     },
     "european_countries": {
         "name": "european_countries",
