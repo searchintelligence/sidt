@@ -140,7 +140,7 @@ def make_search(query: str, result_size: int = 100, country: str = "US"):
 
     results = []
 
-    url = f"https://www.trustpilot.com/api/consumersitesearch-api/businessunits/search?country={country}&pageSize={result_size}&query={query}"
+    url = f"https://www.trustpilot.com/api/consumersitesearch-api/businessunits/search?country={country}&pageSize={result_size}&query={query.replace(" ", "+")}"
     r = make_request(url=url, method="GET").json()
 
     for item in r["businessUnits"]:

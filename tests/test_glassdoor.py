@@ -13,9 +13,9 @@ class TestGlassdoor(unittest.TestCase):
     def test_search(self):
         d = self.gd.search("machine learning", 2280, "STATE")
         # print(json.dumps(d[:5], indent=4))
-        print(len(d))
-        # for i in d:
-        #     print(i)
+        # print(len(d))
+        for i in d:
+            print(i)
         
     def test_get_location(self):
         d = self.gd.get_location("New York")

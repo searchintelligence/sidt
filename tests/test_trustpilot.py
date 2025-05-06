@@ -38,6 +38,7 @@ class TestTrustpilot(unittest.TestCase):
         self.assertIsInstance(reviews[0]["body"], str)
         self.assertIsInstance(reviews[0]["rating"], int)
         print(len(reviews))
+        print(reviews[:5])
 
     def test_get_release_number(self):
         release_number = get_release_number()

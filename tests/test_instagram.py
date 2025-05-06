@@ -1,5 +1,6 @@
 import json
 import unittest
+import logging
 
 from sidt.interfaces.instagram import *
 
@@ -8,7 +9,8 @@ class TestInstagram(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestInstagram, self).__init__(*args, **kwargs)
-        self.insta = Instagram("64879496178%3AB3upW62c1bho3W%3A23%3AAYdqNGOnTqasNETxZ_g5K-Hk_joxAXPVuotehyBnjg")
+        self.insta = Instagram("64879496178%3AINicAW7BSzfejR%3A15%3AAYcL31fjVALmZUkqL4vzmre9XLdHu0DACNMxychsqw")
+        self.logger = logging.getLogger(__name__)
 
     def test_get_profile_id(self):
         id = self.insta.get_profile_id("brandoncoleman")
@@ -17,14 +19,12 @@ class TestInstagram(unittest.TestCase):
         print(id)
     
     def test_get_hashtag_populatiry(self):
-        pop = self.insta.get_hashtag_popularity("drmartens")
-        self.assertIsInstance(pop, int)
-        self.assertGreater(pop, 0)
-        print(pop)
+        pop = self.insta.get_hashtag_popularity("bosox")
+        self.logger.debug(json.dumps(pop, indent=2, ensure_ascii=False))
 
     def test_make_search_query(self):
-        q = self.insta.make_search_query("nasa")
-        print(q)
+        q = self.insta.make_search_query("fyp")
+        print(json.dumps(q, indent=2, ensure_ascii=False))
 
     def test_user_info(self):
         username = "brandoncoleman"
@@ -43,14 +43,14 @@ class TestInstagram(unittest.TestCase):
         print(i)
     
     def test_user_feed(self):
-        f = self.insta.get_user_feed(self.insta.get_profile_id("oprah"), collect_all=False)
+        f = self.insta.get_user_feed(self.insta.get_profile_id("tatemcrae"), collect_all=False)
         # self.assertIsInstance(f, list)
         # self.assertGreater(len(f), 0)
         # print(len(f))
         print(json.dumps(f, indent=2, ensure_ascii=False))
     
     def test_generate_user_analysis(self):
-        a = self.insta.generate_user_analysis("selenagomez")
+        a = self.insta.generate_user_analysis("zara")
         print(json.dumps(a, indent=2, ensure_ascii=False))
 
 

@@ -1,5 +1,5 @@
 import unittest
-from sidt.interfaces.tripadvisor import *
+from sidt.interfaces.tripadvisor_old import *
 
 # 24166513 - restaurant Orlando Bacan
 # 102432 - attraction Universal Studios Florida

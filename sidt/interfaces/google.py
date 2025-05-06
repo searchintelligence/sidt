@@ -1,4 +1,6 @@
+import json
 from math import ceil
+from operator import ne
 import re
 from bs4 import BeautifulSoup
 import requests
@@ -77,6 +79,136 @@ def get_review_overview(id:str):
         "address": address
     }
 
+def get_review_overview2(id:str):
+    cookies = {
+        'SOCS': 'CAESHAgCEhJnd3NfMjAyNDEwMDMtMF9SQzEaAmVuIAEaBgiAj5e4Bg',
+        'HSID': 'AIFOaK6KXnemx7g_l',
+        'SSID': 'AO7894-RLvclfl9jx',
+        'APISID': '0TRupispBieiBO4g/Aj50ulu_oto6YczIe',
+        'SAPISID': 'y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj',
+        '__Secure-1PAPISID': 'y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj',
+        '__Secure-3PAPISID': 'y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj',
+        'S': 'maestro=Yg0pBMhiKfa0P6P0TUDR9TaRREcF4hJ7axKW9-aGCc8',
+        'SID': 'g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDLKZ7RDv6_HouO7jXWk3vwgACgYKAT8SARASFQHGX2Mio7TtY7fjXJmEKJGpUUJOHhoVAUF8yKr0BFCpM9Y7cCOR39p-v6Hp0076',
+        '__Secure-1PSID': 'g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDQ828V18m_xOfLvxG0e6wYwACgYKAWkSARASFQHGX2MiTBQR1N4Z4KiBodeC2CmIRxoVAUF8yKp4oFBRdpMHTatcZ_MHqS6c0076',
+        '__Secure-3PSID': 'g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDqCszod3pjKeeWboNwC3u1gACgYKAToSARASFQHGX2MiKVpQlqIYhenPyZNBumZjHhoVAUF8yKpH9LdlUdju0O08cT3C0t8N0076',
+        'NID': '523=cVfzHJMC8qMh7uea7W6ZWnVYdyRWD1P-A3f0H6sjIhvmBr-dNABH8VgqJM5nsbXsscQJMafW_fKM2FPafThzXIVecYAr4GvDR84PwGy1QMVoedqXrbZWQ_hNy_7lC6QZGZaeGtnyTYOfLgC78PecORDNjR14jCgc_WE_sOtYvmcMFQj6tzWnTqzZMc9J3UvlRZKN-mX0FmVb_XI9VJnt_0Mmqi5oQ4ILPEe256srWcw7rAdWhiL2v_cQXBZPgJZz_oLzusAmHLZa_59ECDLQkho-9tpVzeRgYCzT_-tHH41nxONlF7F9NHffND7WFzcutBvkif9z0rWwX7q1tyngTTlPoylaiWZpsTUcdax8Js9PUkImKIs1HelsyVnqeRkoKbisLWoLcqwbCSpAi9nZ3x9YhHMyf_9jXqw0g_XNZH-vec71m0BuvXKdNzDgXfpK2v9fPyDsWryUNi5BokRn7cQesEcpYkua2npx6DUO4_D74HMb2vOwzqfLlASAdAOmyo3uw-pJhTI2F0wK9phAXRhMZkDRGI1Ov_w9J2jpy7KKe16obBlKsmutmpHnjc18in0b8eJMr8BTbIEQvnkG8-Y6ymr0tQTGFqbPldu0gzyyHyjrBg0JOUJfLMGEGK0zR2EjCjqN2JTI0BEzJkv7XVkYQtDkszzJARypgqTugoUt-DqkUSOCRzsILnbUKc5b6cHPHd4pfMXkhEY9QfB55XUBg6iwRuCK_uDTBNdYcVo5jn1FR7_-T3kzr4zj1xX11xgfGC5Ve-PGmwM-dnIUotHOb0viTq0WErsKXUDVPR6_04AB7dzxCTw0DK1MwJJuab6jeiL8Z5ZyhcY9wVhp_Fv6l0tv70zadTe8FHwgvKHCcNGvZqmjGHHEZT-SSoMYshDzWLS2yfIV1U18KmXGfN93NWB-yWwVTEvTkdrn5MB0O__VW6meAOmvSW02zkRciwukIdCbK8WJoBXLKg8oEkityGlmv4Qu9uDtYBHfb2K-4dEH0COM4-dCUm3JMN2Vma5i83fFYvPqJDEuZJIRp4H-z9vNwQ9469q4BJy7nbrj8kG2ygQTfm7eAGSKu9JljQ',
+        'AEC': 'AVcja2d45IRxLRl5QZ97P6OSNcGzuPnnECLrhJ1X_J2I8YZqlnma7grXOg',
+        '__Secure-ENID': '27.SE=XBRgSHjMLSAiOsaO38d6Ul129JHHq33adCVbXcK-4JKjM-5SBW_UzEsgPPNu6LflgraSC6ZsZno0GYrpKN68UeCcIyZYtsnb7JWvjUCT0rhWSrkeOfcljnZTUpl8-kVpfy_6HdbhM9v6mereDc3jXXY6AVBOBjPsCEceIgECZ0--Tyjah3jGj9LP7UcY2ri_l1PsU7UE421Lx9LnznwofL0H8hFde6uLf_Lxo2NbPAOF0b5NUeFZ1Lc2y34us2X_ZSS1mKj24yOlIuCm_YkoKwEsbm67RN2f1UI4a0wmORIQFS_G0murXF29kWUIKtMCbhG6Xc7CZDQplHJNYRw9zBOyW0Ktc3Dl1MDtFJGpoAqb7Vhi2LCn9D8VoqGN0qspX0fv5uytm3e1T_mxeKkcUWQZZR79bEBCO8KoV3LxbQMxLctbdpHPY7olH4ceSNY5VuhZYolwhgY9Q6Dq6xIaygEC4UpZyE4GrI4',
+        '__Secure-1PSIDTS': 'sidts-CjIB7pHptVCdVgeiZEBo-oYtakGPfCk7luhhrZEqjAgpHv2g03qsnlKI2N_WqxcriUShaxAA',
+        '__Secure-3PSIDTS': 'sidts-CjIB7pHptVCdVgeiZEBo-oYtakGPfCk7luhhrZEqjAgpHv2g03qsnlKI2N_WqxcriUShaxAA',
+        'DV': 'c82VJhmEX-0tYBSxunNAvzKTSBR7ZhkijpdIBVqZhgAAAAA',
+        'SIDCC': 'AKEyXzVaX0cAs81-4-2hkqQJKTh8_c7NhOGjPUrMOeNGLqu6OeTaJg8tZWVC5V__IGeXSVxyRqk_',
+        '__Secure-1PSIDCC': 'AKEyXzVaWMoXNLiBkKtItzCADgGxmYradNcceOfs7MsBxiQH18SOf_w2hz8jeqpN4Si6m-q1jqY',
+        '__Secure-3PSIDCC': 'AKEyXzUh2v05srsuHNkJw3TnHRavtLWrDwyNxn24ThmPHXGW1uFdhmI14a1nnI_NgYvMYWGkUgw',
+    }
+
+    headers = {
+        'accept': '*/*',
+        'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'dnt': '1',
+        'downlink': '7.6',
+        'origin': 'https://www.google.com',
+        'priority': 'u=1, i',
+        'referer': 'https://www.google.com/',
+        'rtt': '100',
+        'sec-ch-prefers-color-scheme': 'light',
+        'sec-ch-ua': '"Chromium";v="135", "Not-A.Brand";v="8"',
+        'sec-ch-ua-arch': '"arm"',
+        'sec-ch-ua-bitness': '"64"',
+        'sec-ch-ua-form-factors': '"Desktop"',
+        'sec-ch-ua-full-version': '"135.0.7049.96"',
+        'sec-ch-ua-full-version-list': '"Chromium";v="135.0.7049.96", "Not-A.Brand";v="8.0.0.0"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-model': '""',
+        'sec-ch-ua-platform': '"macOS"',
+        'sec-ch-ua-platform-version': '"15.4.1"',
+        'sec-ch-ua-wow64': '?0',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        'x-client-data': 'CILvygE=',
+        'x-client-pctx': 'CgcSBWjR7PMq',
+        'x-same-domain': '1',
+        # 'cookie': 'SOCS=CAESHAgCEhJnd3NfMjAyNDEwMDMtMF9SQzEaAmVuIAEaBgiAj5e4Bg; HSID=AIFOaK6KXnemx7g_l; SSID=AO7894-RLvclfl9jx; APISID=0TRupispBieiBO4g/Aj50ulu_oto6YczIe; SAPISID=y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj; __Secure-1PAPISID=y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj; __Secure-3PAPISID=y4680TbuX7rnmQBP/A2bow1D7Fp2OXPSUj; S=maestro=Yg0pBMhiKfa0P6P0TUDR9TaRREcF4hJ7axKW9-aGCc8; SID=g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDLKZ7RDv6_HouO7jXWk3vwgACgYKAT8SARASFQHGX2Mio7TtY7fjXJmEKJGpUUJOHhoVAUF8yKr0BFCpM9Y7cCOR39p-v6Hp0076; __Secure-1PSID=g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDQ828V18m_xOfLvxG0e6wYwACgYKAWkSARASFQHGX2MiTBQR1N4Z4KiBodeC2CmIRxoVAUF8yKp4oFBRdpMHTatcZ_MHqS6c0076; __Secure-3PSID=g.a000wAg7mR4vE4EF3Bhk0aZI_A5K5KwK9xBLz4ybHgfpe9P883XDqCszod3pjKeeWboNwC3u1gACgYKAToSARASFQHGX2MiKVpQlqIYhenPyZNBumZjHhoVAUF8yKpH9LdlUdju0O08cT3C0t8N0076; NID=523=cVfzHJMC8qMh7uea7W6ZWnVYdyRWD1P-A3f0H6sjIhvmBr-dNABH8VgqJM5nsbXsscQJMafW_fKM2FPafThzXIVecYAr4GvDR84PwGy1QMVoedqXrbZWQ_hNy_7lC6QZGZaeGtnyTYOfLgC78PecORDNjR14jCgc_WE_sOtYvmcMFQj6tzWnTqzZMc9J3UvlRZKN-mX0FmVb_XI9VJnt_0Mmqi5oQ4ILPEe256srWcw7rAdWhiL2v_cQXBZPgJZz_oLzusAmHLZa_59ECDLQkho-9tpVzeRgYCzT_-tHH41nxONlF7F9NHffND7WFzcutBvkif9z0rWwX7q1tyngTTlPoylaiWZpsTUcdax8Js9PUkImKIs1HelsyVnqeRkoKbisLWoLcqwbCSpAi9nZ3x9YhHMyf_9jXqw0g_XNZH-vec71m0BuvXKdNzDgXfpK2v9fPyDsWryUNi5BokRn7cQesEcpYkua2npx6DUO4_D74HMb2vOwzqfLlASAdAOmyo3uw-pJhTI2F0wK9phAXRhMZkDRGI1Ov_w9J2jpy7KKe16obBlKsmutmpHnjc18in0b8eJMr8BTbIEQvnkG8-Y6ymr0tQTGFqbPldu0gzyyHyjrBg0JOUJfLMGEGK0zR2EjCjqN2JTI0BEzJkv7XVkYQtDkszzJARypgqTugoUt-DqkUSOCRzsILnbUKc5b6cHPHd4pfMXkhEY9QfB55XUBg6iwRuCK_uDTBNdYcVo5jn1FR7_-T3kzr4zj1xX11xgfGC5Ve-PGmwM-dnIUotHOb0viTq0WErsKXUDVPR6_04AB7dzxCTw0DK1MwJJuab6jeiL8Z5ZyhcY9wVhp_Fv6l0tv70zadTe8FHwgvKHCcNGvZqmjGHHEZT-SSoMYshDzWLS2yfIV1U18KmXGfN93NWB-yWwVTEvTkdrn5MB0O__VW6meAOmvSW02zkRciwukIdCbK8WJoBXLKg8oEkityGlmv4Qu9uDtYBHfb2K-4dEH0COM4-dCUm3JMN2Vma5i83fFYvPqJDEuZJIRp4H-z9vNwQ9469q4BJy7nbrj8kG2ygQTfm7eAGSKu9JljQ; AEC=AVcja2d45IRxLRl5QZ97P6OSNcGzuPnnECLrhJ1X_J2I8YZqlnma7grXOg; __Secure-ENID=27.SE=XBRgSHjMLSAiOsaO38d6Ul129JHHq33adCVbXcK-4JKjM-5SBW_UzEsgPPNu6LflgraSC6ZsZno0GYrpKN68UeCcIyZYtsnb7JWvjUCT0rhWSrkeOfcljnZTUpl8-kVpfy_6HdbhM9v6mereDc3jXXY6AVBOBjPsCEceIgECZ0--Tyjah3jGj9LP7UcY2ri_l1PsU7UE421Lx9LnznwofL0H8hFde6uLf_Lxo2NbPAOF0b5NUeFZ1Lc2y34us2X_ZSS1mKj24yOlIuCm_YkoKwEsbm67RN2f1UI4a0wmORIQFS_G0murXF29kWUIKtMCbhG6Xc7CZDQplHJNYRw9zBOyW0Ktc3Dl1MDtFJGpoAqb7Vhi2LCn9D8VoqGN0qspX0fv5uytm3e1T_mxeKkcUWQZZR79bEBCO8KoV3LxbQMxLctbdpHPY7olH4ceSNY5VuhZYolwhgY9Q6Dq6xIaygEC4UpZyE4GrI4; __Secure-1PSIDTS=sidts-CjIB7pHptVCdVgeiZEBo-oYtakGPfCk7luhhrZEqjAgpHv2g03qsnlKI2N_WqxcriUShaxAA; __Secure-3PSIDTS=sidts-CjIB7pHptVCdVgeiZEBo-oYtakGPfCk7luhhrZEqjAgpHv2g03qsnlKI2N_WqxcriUShaxAA; DV=c82VJhmEX-0tYBSxunNAvzKTSBR7ZhkijpdIBVqZhgAAAAA; SIDCC=AKEyXzVaX0cAs81-4-2hkqQJKTh8_c7NhOGjPUrMOeNGLqu6OeTaJg8tZWVC5V__IGeXSVxyRqk_; __Secure-1PSIDCC=AKEyXzVaWMoXNLiBkKtItzCADgGxmYradNcceOfs7MsBxiQH18SOf_w2hz8jeqpN4Si6m-q1jqY; __Secure-3PSIDCC=AKEyXzUh2v05srsuHNkJw3TnHRavtLWrDwyNxn24ThmPHXGW1uFdhmI14a1nnI_NgYvMYWGkUgw',
+    }
+
+    params = {
+        'rpcids': 'nz5PNe',
+        'source-path': '/search',
+        'hl': 'en-GB',
+        '_reqid': '47196',
+        'rt': 'c',
+    }
+
+    data = f'f.req=%5B%5B%5B%22nz5PNe%22%2C%22%5B%5B%5C%22{id}%5C%22%5D%2C1%5D%22%2Cnull%2C%22generic%22%5D%5D%5D&at=AKlEn5iJ1XLZHUGxLPYANZ_sMLag%3A1745496392870&'
+
+    r = requests.post(
+        'https://www.google.com/wizrpcui/_/WizRpcUi/data/batchexecute',
+        params=params,
+        cookies=cookies,
+        headers=headers,
+        data=data,
+    )
+    data1 = r.text.splitlines()[3:-2]
+    data2 = json.loads('\n'.join(data1))
+    data3 = json.loads(data2[0][2])
+    review_count = data3[3]
+    rating = data3[2]
+    address = data3[1]
+    return {
+        "review_count": review_count,
+        "rating": rating,
+        "address": address
+    }
+
+def get_reviews2(id:str):
+
+    reviews = []
+    next_page_token = ""
+
+    page_counter = 0
+    more = True
+    while more:
+        try:
+            url = f"https://www.google.com/maps/rpc/listugcposts?authuser=0&hl=en&gl=uk&pb=!1m6!1s{id}!6m4!4m1!1e1!4m1!1e3!2m2!1i10!2s{next_page_token}!5m2!1s2!7e81!8m9!2b1!3b1!5b1!7b1!12m4!1b1!2b1!4m1!1e1!11m0!13m1!1e1"
+            r = requests.get(url, allow_redirects=True, headers=headers, cookies=cookies)
+            data = json.loads(re.sub(r'^[^\[{]*', '', r.text))
+
+            try: next_page_token = data[1]
+            except: continue
+            if next_page_token == "": more = False
+
+            review_data = data[2]
+            for item in review_data:
+                try: author = item[0][1][4][5][0]
+                except: author = None
+                try: rating = 0
+                except: rating = None
+                try: date = item[0][1][6]
+                except: date = None
+                try: review = item[0][2][15][0][0]
+                except: review = None
+                reviews.append({
+                    "author": author,
+                    "rating": rating,
+                    "date": date,
+                    "review": review
+                })
+            page_counter += 1
+        except:
+            break
+    if page_counter == 128: max_reached = True
+    else: max_reached = False
+    return {
+        "max_reached": max_reached,
+        "reviews_found": len(reviews),
+        "pages": page_counter,
+        "reviews": reviews
+    }
+
 def get_reviews(id:str, sort_by:str="qualityScore"):
     valid_sort_options = ["qualityScore", "newestFirst", "ratingHigh", "ratingLow"]
     if sort_by not in valid_sort_options:
@@ -90,12 +222,14 @@ def get_reviews(id:str, sort_by:str="qualityScore"):
     while more:
 
         url = f"https://www.google.com/async/reviewDialog?async=feature_id:{id},sort_by:{sort_by},next_page_token:{next_page_token},_fmt:pc"
-        r = requests.request("GET", url, allow_redirects=True, headers=headers, cookies=cookies).text
+        r = requests.get(url, allow_redirects=True, headers=headers, cookies=cookies).text
         data = BeautifulSoup(r, "html.parser")
 
         try: next_page_token = data.find(attrs={"data-google-review-count":True}).get("data-next-page-token")
         except: continue
         if next_page_token == "": more = False
+
+        print(f"next: {next_page_token}")
 
         review_data = data.find(attrs={"data-google-review-count": True}).find_all(attrs={"jscontroller": "fIQYlf"})
 
