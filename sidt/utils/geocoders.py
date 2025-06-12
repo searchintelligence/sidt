@@ -8,6 +8,35 @@ import geopandas as gpd
 class Geocoder:
 
     def __init__(self, points, package_gdf=None, gdf=None, distance=None):
+        """
+        Geocoder class for geocoding points within a given distance of a GeoDataFrame.
+        Arguments: 
+            points (pd.DataFrame): A DataFrame or GeoDataFrame containing points to be geocoded, with a geometry column or latitude and longitude columns.
+            package_gdf (str): The name of a GeoJSON package to use as the base for the geocoding. Call GeoPackages.list_packages() to see available packages.
+            gdf (gpd.GeoDataFrame): A GeoDataFrame to use as the regions for the geocoding. Can be provided instead of package_gdf.
+            distance (int): The distance in meters to buffer the regions by.
+        
+        Call the .geocode() method to perform the geocoding after initialisation.
+
+        Example:
+            from sidt.utils.geocoders import Geocoder
+            from sidt.utils.geocoders import GeoPackages
+
+            # Show the available packages
+            print(GeoPackages.list_packages())
+
+            # Define the points to be geocoded
+            df = pd.DataFrame({
+                "name": ["London", "Paris", "Berlin"],
+                "latitude": [51.5074, 48.8566, 52.5200],
+                "longitude": [-0.1278, 2.3522, 13.4050]
+            })
+
+            # Geocode the points
+            result = Geocoder(df, package_gdf="countries", distance=100).geocode()
+        """
+
+        
 
         # Buffer distance
         self.distance = distance if distance is not None else 0
