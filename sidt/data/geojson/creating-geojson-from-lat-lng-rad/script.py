@@ -8,7 +8,7 @@ import os
 dir = sys.path[0]
 
 # Read Excel files
-df_cities = pd.read_excel(os.path.join(dir, "cities.xlsx"), index_col=None)
+df_cities = pd.read_excel(os.path.join(dir, "us_cities.xlsx"), index_col=None)
 
 # Convert df_cities and df_hotels to GeoDataFrames with WGS84 CRS
 gdf_cities = gpd.GeoDataFrame(df_cities, geometry=gpd.points_from_xy(df_cities["lng"], df_cities["lat"]))
