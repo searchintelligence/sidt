@@ -1,7 +1,7 @@
 {
     "countries": {
         "name": "countries",
-        "geo_file": "un_member_states.geojson"
+        "geo_file": "countries.geojson"
     },
     "uk_local_authorities_24": {
         "name": "uk_local_authorities_24",
@@ -11,9 +11,9 @@
         "name": "uk_local_authorities_21",
         "geo_file": "uk_local_authorities_21.geojson"
     },
-    "european_countries": {
-        "name": "european_countries",
-        "geo_file": "un_member_states_europe.geojson"
+    "countries_europe": {
+        "name": "countries_europe",
+        "geo_file": "countries_europe.geojson"
     },
     "us_counties": {
         "name": "us_counties",
